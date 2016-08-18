@@ -59,7 +59,7 @@ g env e = case e of
       KLetTuple (zip xs' ts) (find y env) <$> g env' e
 
 
-  KApp x ys -> return $ KApp       (find x env) (map (`find` env) ys)
+  KApp x ys -> return $ KApp (find x env) (map (`find` env) ys)
   KExtArray x -> return $ KExtArray x
   KExtFunApp x ys -> return $ KExtFunApp x (map (`find` env) ys)
   KTuple xs -> return $ KTuple (map (`find` env) xs)

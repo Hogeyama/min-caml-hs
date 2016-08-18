@@ -5,7 +5,7 @@ module Id where
 import CamlMonad
 import Control.Lens
 
-ppList :: [String] -> String
+ppList :: [Id] -> Id
 ppList = \case
   []  -> ""
   [x] -> x

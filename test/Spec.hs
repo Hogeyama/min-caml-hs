@@ -8,22 +8,12 @@ import Parser
 import Typing
 import KNormal
 import Alpha
-import Beta
-import Assoc
-import Inline
+import Optimise
 import System.IO (Handle, stdin, hGetContents, openFile, IOMode(..))
 default(Int)
 
 limit :: Int
-limit = 1
-
-iter :: Int -> KExpr -> Caml KExpr
-iter 0 e = return e
-iter n e = do
-  e' <- inline =<< assoc =<< beta e
-  if e==e'
-    then return e
-    else iter (n-1) e'
+limit = 100
 
 test :: FilePath -> IO ()
 test f = do
@@ -37,7 +27,7 @@ test f = do
           e <- typing e
           e <- kNormalize e
           e <- alpha e
-          {-e <- iter limit e-}
+          e <- optimise limit e
           return e
       case m of
         Left err -> print err
@@ -50,4 +40,5 @@ main = test "test/test.ml"
       --     >>= typing
       --     >>= kNormalize
       --     >>= alpha
-      --     >>= iter 1000
+      --     >>= optimise 1000
+

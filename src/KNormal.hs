@@ -4,7 +4,8 @@
 module KNormal (
   KExpr(..),
   KFunDef(..),
-  kNormalize
+  kNormalize,
+  fv
 ) where
 
 import CamlMonad
@@ -46,7 +47,6 @@ data KFunDef = KFunDef { _kname ::  (Id,Type)
                        }
               deriving (Show, Eq)
 makeLenses ''KFunDef
-
 
 fv :: KExpr -> Set Id
 fv = \case
@@ -199,6 +199,10 @@ g env = \case
           let bind xs []       = return (KExtFunApp f xs, t)
               bind xs (e2:e2s) = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s
           in  bind [] e2s
+        Just t -> do
+          liftIO $ print t
+          error ""
+
         _ -> error "Aiee!!"
 
   EApp e1 e2s ->

@@ -18,8 +18,7 @@ typing e = do
   t <- infer M.empty e
   unify TUnit t `catch`
     (\Unify{} -> throw $ Failure "top level does not have type unit")
-  newExtenv <- join $ uses extTyEnv (mapM derefType)
-  extTyEnv .= newExtenv
+  extTyEnv <~ join (uses extTyEnv (mapM derefType))
   derefExpr e
 
 -- zonkType
