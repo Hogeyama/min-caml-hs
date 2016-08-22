@@ -27,7 +27,7 @@ default (Text)
 main :: IO ()
 main = do
   mapM_ test targets
-  putStrLn $ "complete " ++ show (length targets) ++ " tests"
+  putStrLn $ "\n\tcompleted " ++ show (length targets) ++ " tests"
 
 test :: FilePath -> IO ()
 test f = do
