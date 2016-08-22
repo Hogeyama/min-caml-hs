@@ -25,7 +25,9 @@ import qualified Data.Text.IO as TIO
 default (Text)
 
 main :: IO ()
-main = mapM_ test targets
+main = do
+  mapM_ test targets
+  putStrLn $ "complete " ++ length targets ++ " tests"
 
 test :: FilePath -> IO ()
 test f = do
