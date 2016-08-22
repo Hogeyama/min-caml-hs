@@ -1,9 +1,8 @@
 
 module Main where
 
-import CamlMonad
+import AllTypes
 import Type
-import Syntax
 import Lexer
 import Parser
 import Typing
