@@ -2,7 +2,7 @@
 
 module Id where
 
-import CamlMonad
+import AllTypes
 import Control.Lens
 
 ppList :: [Id] -> Id

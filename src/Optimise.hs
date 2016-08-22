@@ -1,7 +1,7 @@
 
 module Optimise where
 
-import CamlMonad
+import AllTypes
 import KNormal
 import Beta
 import Assoc

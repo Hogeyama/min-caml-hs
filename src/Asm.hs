@@ -5,58 +5,13 @@ module Asm where
 
 import Id
 import Type
-import CamlMonad
+import AllTypes
 
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Vector (Vector, (!))
 import qualified Data.Vector as V
 import Control.Lens
-
-type Immediate = Int
-type IdOrImm = Either Id Immediate
-
- -- 命令の列
-data Asm = AsmAns AExpr
-         | AsmLet (Id, Type) AExpr Asm
-
--- x86の各命令に対応
-data AExpr = ANop
-           | ASet Int
-           | ASetL Label
-           | AMov Id
-           | ANeg Id
-           | AAdd Id IdOrImm
-           | ASub Id IdOrImm
-           | ALd Id IdOrImm Int
-           | ASt Id Id IdOrImm Int
-           | AFMovD Id
-           | AFNegD Id
-           | AFAddD Id Id
-           | AFSubD Id Id
-           | AFMulD Id Id
-           | AFDivD Id Id
-           | ALdDF Id IdOrImm Int
-           | AStDF Id Id IdOrImm Int
-           | AComment String
-           | AIfEq Id IdOrImm Asm Asm
-           | AIfLe Id IdOrImm Asm Asm
-           | AIfGe Id IdOrImm Asm Asm
-           | AIfFEq Id Id Asm Asm
-           | AIfFLe Id Id Asm Asm
-           | ACallCls Id [Id] [Id]
-           | ACallDir Id [Id] [Id]
-           | ASave Id Id
-           | ARestore Id
-
-data AFunDef = AFunDef { _aname  :: Label
-                       , _aargs  :: [Id]
-                       , _afargs :: [Id]
-                       , _abody  :: Asm
-                       , _aret   :: Type }
-makeLenses ''AFunDef
-
-data Prog = Prog [(Id, Double)] [AFunDef] Asm
 
 fLetD :: (Id, AExpr, Asm) -> Asm
 fLetD (x,e1,a2) = AsmLet (x,TFloat) e1 a2
@@ -75,8 +30,8 @@ fregs = V.generate 8 $ \i -> "%xmm" ++ show i
 allRegs :: [String]
 allRegs = V.toList regs
 
-allFregs :: [String]
-allFregs = V.toList fregs
+allFRegs :: [String]
+allFRegs = V.toList fregs
 
 -- closure address
 regCl :: String
@@ -116,8 +71,8 @@ fv' (AsmAns a) = fvAExpr a
 fv' (AsmLet (x,t) e a) = fvAExpr e ++ removeAndUniq (S.singleton x) (fv a)
 
 fvOfIdOrImm :: IdOrImm -> [String]
-fvOfIdOrImm (Left x)  = [x]
-fvOfIdOrImm (Right _) = []
+fvOfIdOrImm (V x) = [x]
+fvOfIdOrImm (C _) = []
 
 fvAExpr :: AExpr -> [String]
 fvAExpr = \case

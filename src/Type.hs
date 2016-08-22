@@ -1,8 +1,9 @@
 
 module Type where
 
-import CamlMonad
+import AllTypes
 import Data.IORef
+import Control.Lens
 
 genType :: Caml Type
 genType = do

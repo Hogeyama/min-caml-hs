@@ -2,10 +2,9 @@
 
 module Inline where
 
-import Id
 import KNormal
 import qualified Alpha
-import CamlMonad
+import AllTypes
 import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Lens

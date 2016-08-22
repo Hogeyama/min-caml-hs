@@ -3,24 +3,27 @@ version:             0.1.0.0
 build-type:          Simple
 extra-source-files:  src/Parser.y
                      src/Lexer.x
+                     --src/float.h
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
+  C-sources:           src/float.c
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:       base
                      , mtl
                      , lens
+                     , text
                      , array
                      , vector
-                     , parsec
                      , containers
                      , transformers
   default-language:    Haskell2010
   build-tools:         happy, alex
   exposed-modules:     Lexer
                      , Parser
-                     , Syntax
+                     , AllTypes
+                     , Id
                      , Type
                      , Typing
                      , KNormal
@@ -31,16 +34,12 @@ library
                      , Inline
                      , ConstFold
                      , Elim
-                        -- ここまでOK
                      , Closure
-                     , Virtual
-                     , Simm
-                     , RegAlloc
                      , Asm
-                     , Id
+                     , Virtual
+                     , RegAlloc
+                     , Simm
                      , Emit
-                     , CamlMonad
-
 executable min-caml-hs
   hs-source-dirs:      app
   main-is:             Main.hs
@@ -49,11 +48,14 @@ executable min-caml-hs
                      , min-caml
   default-language:    Haskell2010
 
-test-suite hoge-test
+test-suite min-caml-test
   type:                exitcode-stdio-1.0
+  includes:            float.h
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
+                     , text
+                     , shelly
                      , min-caml
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
   default-language:    Haskell2010

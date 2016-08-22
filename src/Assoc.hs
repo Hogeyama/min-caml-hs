@@ -2,12 +2,8 @@
 
 module Assoc where
 
-import Id
 import KNormal
-import CamlMonad
-import Data.Map (Map)
-import qualified Data.Map as M
-
+import AllTypes
 
 assoc :: KExpr -> Caml KExpr
 assoc = return . g

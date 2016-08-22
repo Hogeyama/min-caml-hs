@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+libmincaml="$HOME/.local/bin/run-mincaml.d/libmincaml.S"
+stub="$HOME/.local/bin/run-mincaml.d/stub.c"
+CC="gcc"
+CFLAGS="-g -O2 -Wall -m32"
+
+gcc  $CFLAGS $1.s $libmincaml $stub -lm -o $1 && ./$1 && rm $1

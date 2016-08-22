@@ -8,45 +8,13 @@ module KNormal (
   fv
 ) where
 
-import CamlMonad
+import AllTypes
 import Id
-import Syntax
 import Control.Lens
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
-
-data KExpr = KUnit
-           | KInt Int
-           | KFloat Double
-           | KNeg  Id
-           | KAdd  Id Id
-           | KSub  Id Id
-           | KFNeg Id
-           | KFAdd Id Id
-           | KFSub Id Id
-           | KFMul Id Id
-           | KFDiv Id Id
-           | KIfEq Id Id KExpr KExpr
-           | KIfLe Id Id KExpr KExpr
-           | KLet  (Id, Type) KExpr KExpr
-           | KVar  Id
-           | KLetRec KFunDef KExpr
-           | KApp Id [Id]
-           | KTuple [Id]
-           | KLetTuple [(Id,Type)] Id KExpr
-           | KGet Id Id
-           | KPut Id Id Id
-           | KExtArray Id
-           | KExtFunApp Id [Id]
-           deriving (Show, Eq)
-data KFunDef = KFunDef { _kname ::  (Id,Type)
-                       , _kargs :: [(Id,Type)]
-                       , _kbody :: KExpr
-                       }
-              deriving (Show, Eq)
-makeLenses ''KFunDef
 
 fv :: KExpr -> Set Id
 fv = \case
@@ -69,7 +37,7 @@ fv = \case
   KIfEq x y e1 e2 -> S.insert x (S.insert y (S.union (fv e1) (fv e2)))
   KIfLe x y e1 e2 -> S.insert x (S.insert y (S.union (fv e1) (fv e2)))
 
-  KLet (x,t) e1 e2 -> S.union (fv e1) (S.delete x (fv e2))
+  KLet (x,_t) e1 e2 -> S.union (fv e1) (S.delete x (fv e2))
 
   KVar x -> S.singleton x
 

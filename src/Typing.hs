@@ -7,14 +7,15 @@ module Typing where
 import Control.Monad (zipWithM_, join)
 import qualified Data.Map as M
 import Control.Lens
-import CamlMonad
-import Syntax
+import AllTypes
 import Type
-import Id
+import Data.IORef
+import System.IO.Unsafe (unsafePerformIO)
 
 -- main function
 typing :: Expr -> Caml Expr
 typing e = do
+  extTyEnv .= M.empty
   t <- infer M.empty e
   unify TUnit t `catch`
     (\Unify{} -> throw $ Failure "top level does not have type unit")
@@ -95,18 +96,20 @@ unify t1 t2 = case (t1,t2) of
   (TArray t1', TArray t2') -> unify t1' t2'
   (TVar ref1, TVar ref2)
     | ref1 == ref2 -> return ()
-  (TVar ref1, _) ->
-      readType ref1 >>= \case
-        Nothing -> ifM (occur ref1 t2)
-                       (throw $ Unify t1 t2)
-                       (writeType ref1 t2)
-        Just t1' -> unify t1' t2
-  (_, TVar ref2) ->
-      readType ref2 >>= \case
-        Nothing -> ifM (occur ref2 t1)
-                       (throw $ Unify t1 t2)
-                       (writeType ref2 t1)
-        Just t2' -> unify t1 t2'
+    | otherwise -> (,) <$> readType ref1 <*> readType ref2 >>= \case
+          (Just t1', _) -> unify t1' t2
+          (_, Just t2') -> unify t1  t2'
+          _             -> writeType ref1 t2
+  (TVar ref1, t2) -> readType ref1 >>= \case
+      Nothing -> ifM (occur ref1 t2)
+                     (throw $ Unify t1 t2)
+                     (writeType ref1 t2)
+      Just t1' -> unify t1' t2
+  (t1, TVar ref2) -> readType ref2 >>= \case
+      Nothing -> ifM (occur ref2 t1)
+                     (throw $ Unify t1 t2)
+                     (writeType ref2 t1)
+      Just t2' -> unify t1 t2'
   _ -> throw $ Unify t1 t2
 
 unifyM1 :: Type -> Caml Type -> Caml ()
@@ -199,6 +202,13 @@ infer env e =
       let argtys = map snd yts
       t' <- infer (M.union (M.fromList yts) env') e1
       unify t (TFun argtys t')
+      --dt <- derefType t
+      --dt'<- derefType t'
+      --dts<- mapM derefType argtys
+      --liftIO $ print x
+      --liftIO $ print dt
+      --liftIO $ print dts
+      --liftIO $ print dt'
       infer env' e2
 
     EApp e es -> do
@@ -230,11 +240,14 @@ infer env e =
       return TUnit
 
   `catch`
-    \(Unify t1 t2) -> do
-        e' <- derefExpr e
-        t1' <- derefType t1
-        t2' <- derefType t2
-        throw $ Typing e' t1' t2'
+    \err -> case err of
+      Unify t1 t2 -> do
+        --e' <- derefExpr e
+        --t1' <- derefType t1
+        --t2' <- derefType t2
+        --throw $ Typing e' t1' t2'
+        throw $ Typing e t1 t2
+      _ -> throw err
 
 
 ----------

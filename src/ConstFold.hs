@@ -1,13 +1,10 @@
 
 module ConstFold where
 
-import Id
 import KNormal
-import qualified Alpha
-import CamlMonad
+import AllTypes
 import Data.Map (Map)
 import qualified Data.Map as M
-import Control.Lens
 import Data.Maybe (fromJust)
 import Data.List (foldl')
 
@@ -86,7 +83,6 @@ g env e = case e of
     | otherwise -> KLetTuple xts y (g env e)
 
   e -> e
-
 
 
 

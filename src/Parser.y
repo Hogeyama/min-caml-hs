@@ -2,8 +2,7 @@
 module Parser where
 
 import Lexer
-import CamlMonad
-import Syntax
+import AllTypes
 import Id
 import Type
 }

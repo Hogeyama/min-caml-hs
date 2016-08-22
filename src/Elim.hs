@@ -5,7 +5,7 @@ module Elim where
 
 import Id
 import KNormal
-import CamlMonad
+import AllTypes
 import qualified Data.Set as S
 
 hasSubEffect :: KExpr -> Bool

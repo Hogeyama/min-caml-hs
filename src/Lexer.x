@@ -1,6 +1,6 @@
 {
 module Lexer where
-import CamlMonad
+import AllTypes
 }
 
 %wrapper "basic"
@@ -13,33 +13,33 @@ $alpha = [a-zA-Z]
 
 tokens :-
   $white+ ;
-  \(            { \s -> TokenLParen         }
-  \)            { \s -> TokenRParen         }
-  true          { \s -> TokenBool True      }
-  false         { \s -> TokenBool False     }
-  not           { \s -> TokenNot            }
-  @int          { \s -> TokenInt (read s)   }
-  @float        { \s -> TokenFloat (read s) }
-  \-            { \s -> TokenMinus          }
-  \+            { \s -> TokenPlus           }
-  \-\.          { \s -> TokenMinusDot       }
-  \+\.          { \s -> TokenPlusDot        }
-  \*\.          { \s -> TokenAstDot         }
-  \/\.          { \s -> TokenSlashDot       }
-  \=            { \s -> TokenEq             }
-  \<\>          { \s -> TokenLtGt           }
-  \<\=          { \s -> TokenLe             }
-  \<\=          { \s -> TokenGe             }
-  \<            { \s -> TokenLt             }
-  \>            { \s -> TokenGt             }
-  if            { \s -> TokenIf             }
-  then          { \s -> TokenThen           }
-  else          { \s -> TokenElse           }
-  let           { \s -> TokenLet            }
-  in            { \s -> TokenIn             }
-  rec           { \s -> TokenRec            }
-  \,            { \s -> TokenComma          }
-  \_            { \s -> TokenWild           }
+  \(            { \s -> TokenLParen              }
+  \)            { \s -> TokenRParen              }
+  true          { \s -> TokenBool True           }
+  false         { \s -> TokenBool False          }
+  not           { \s -> TokenNot                 }
+  @int          { \s -> TokenInt (read s)        }
+  @float        { \s -> TokenFloat (readFloat s) }
+  \-            { \s -> TokenMinus               }
+  \+            { \s -> TokenPlus                }
+  \-\.          { \s -> TokenMinusDot            }
+  \+\.          { \s -> TokenPlusDot             }
+  \*\.          { \s -> TokenAstDot              }
+  \/\.          { \s -> TokenSlashDot            }
+  \=            { \s -> TokenEq                  }
+  \<\>          { \s -> TokenLtGt                }
+  \<\=          { \s -> TokenLe                  }
+  \<\=          { \s -> TokenGe                  }
+  \<            { \s -> TokenLt                  }
+  \>            { \s -> TokenGt                  }
+  if            { \s -> TokenIf                  }
+  then          { \s -> TokenThen                }
+  else          { \s -> TokenElse                }
+  let           { \s -> TokenLet                 }
+  in            { \s -> TokenIn                  }
+  rec           { \s -> TokenRec                 }
+  \,            { \s -> TokenComma               }
+  \_            { \s -> TokenWild                }
         -- TODO
         --  IDENT(Id.gentmp Type.Unit)
         -- に変換する, Parserでやるのが楽かな?
@@ -97,4 +97,8 @@ scanTokens str = go ('\n',[],str)
             return $ act (take len s) : l'
         AlexError _ -> Left $ Failure "lexical error"
 
+readFloat :: String -> Double
+readFloat s
+    | last s == '.' = read (s++['0'])
+    | otherwise     = read s
 }

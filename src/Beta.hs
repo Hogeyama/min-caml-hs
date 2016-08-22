@@ -2,9 +2,8 @@
 
 module Beta where
 
-import Id
 import KNormal
-import CamlMonad
+import AllTypes
 import Data.Map (Map)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M

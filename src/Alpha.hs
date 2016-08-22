@@ -1,9 +1,8 @@
 
 module Alpha where
 
+import AllTypes
 import Id
-import KNormal
-import CamlMonad
 import Data.Map (Map)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
