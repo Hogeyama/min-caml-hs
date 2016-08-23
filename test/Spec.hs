@@ -1,10 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
-import AllTypes (runCaml, Error)
-import Lexer    (scanTokens)
+import AllTypes (runCamlDefault, Error)
+import Lexer    (lex)
 import Parser   (parse)
 import Typing   (typing)
 import KNormal  (kNormalize)
@@ -16,6 +17,7 @@ import RegAlloc (regAlloc)
 import Simm     (simm)
 import Emit     (emit)
 
+import Prelude hiding (lex)
 import Control.Monad (forM_, when)
 import System.IO (readFile, withFile, IOMode(..))
 import qualified Shelly as Sh
@@ -57,20 +59,18 @@ optimiseLimit = 1000
 unit :: FilePath -> IO (Either Error ())
 unit f = do
   s <- readFile (f ++ ".ml")
-  case scanTokens s of
-    Right tks ->
-      withFile (f ++ "-res.s") WriteMode $ \out ->
-       runCaml $ parse tks
-       >>= typing
-       >>= kNormalize
-       >>= alpha
-       >>= optimise optimiseLimit
-       >>= closureConvert
-       >>= virtualCode
-       >>= simm
-       >>= regAlloc
-       >>= emit out
-    Left e -> return $ Left e
+  withFile (f ++ "-res.s") WriteMode $ \out ->
+    runCamlDefault $ lex s
+    >>= parse
+    >>= typing
+    >>= kNormalize
+    >>= alpha
+    >>= optimise
+    >>= closureConvert
+    >>= virtualCode
+    >>= simm
+    >>= regAlloc
+    >>= emit out
 
 targets :: [FilePath]
 targets = [
