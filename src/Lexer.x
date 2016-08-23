@@ -97,6 +97,11 @@ scanTokens str = go ('\n',[],str)
             return $ act (take len s) : l'
         AlexError _ -> Left $ Failure "lexical error"
 
+lex :: String -> Caml [Token]
+lex str = case scanTokens str of
+  Left e -> throw e
+  Right tks -> return tks
+
 readFloat :: String -> Double
 readFloat s
     | last s == '.' = read (s++['0'])
