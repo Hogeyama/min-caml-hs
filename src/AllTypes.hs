@@ -227,18 +227,21 @@ data S = S { _idCount :: Int
            , _virtualData :: [(Label,Double)]
            , _stackSet :: Set Id -- for Emit module
            , _stackMap :: [Id]   -- for Emit module
+           , _optimiseLimit :: Int
            }
+           deriving Show
 makeLenses ''S
 
 initialState :: S
 initialState = S { _idCount = 0
                  , _tvCount = 0
-                 , _extTyEnv = M.empty 
+                 , _extTyEnv = M.empty
                  , _threshold = 0
                  , _closureToplevel = []
                  , _virtualData = []
                  , _stackSet = S.empty
                  , _stackMap = []
+                 , _optimiseLimit = 100
                  }
 
 liftIO :: IO a -> Caml a
@@ -252,9 +255,13 @@ throw = throwError
 catch :: Caml a -> (Error -> Caml a) -> Caml a
 catch = catchError
 
-runCaml :: Caml a -> IO (Either Error a)
-runCaml c = runExceptT $ evalStateT c initialState
+runCamlDefault :: Caml a -> IO (Either Error a)
+runCamlDefault c = runExceptT $ evalStateT c initialState
 
-runCamlWith :: Caml a -> S -> IO (Either Error a)
-runCamlWith c s = runExceptT $ evalStateT c s
+runCaml :: Caml a -> S -> IO (Either Error a)
+runCaml c s = runExceptT $ evalStateT c s
+
+liftEither :: Either Error a -> Caml a
+liftEither (Left e)  = throw e
+liftEither (Right a) = return a
 

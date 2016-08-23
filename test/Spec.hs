@@ -44,7 +44,7 @@ test f = do
     Left e -> error $ f ++ ": " ++ show e
 
 exe :: FilePath -> Sh Text
-exe s = run "gcc" options >> (run outp [] <* rm outp)
+exe s = silently $ run "gcc" options >> (run outp [] <* rm outp)
   where
     options = ["-g", "-O2", "-Wall", "-m32"] ++ sources ++ ["-lm", "-o", out]
     sources = map pack [s ++ ".s", "libmincaml.S", "stub.c"]
