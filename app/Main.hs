@@ -26,21 +26,10 @@ main = runCommand $ \opts args -> do
                        , _optimiseLimit = iter opts}
   mapM_ (file s) args
 
-data MinCamlOptions = MinCamlOptions
-                    { inline :: Int
-                    , iter   :: Int
-                    }
-instance Options MinCamlOptions where
-  defineOptions = pure MinCamlOptions
-               <*> simpleOption "inline"
-                   0 "maximum size of functions inlined"
-               <*> simpleOption "iter"
-                   100 "maximum number of optimizations iterated"
-
 file :: S -> FilePath -> IO ()
 file s f = do
   str <- readFile (f ++ ".ml")
-  withFile (f ++ "-res.s") WriteMode $ \out -> do
+  withFile (f ++ ".s") WriteMode $ \out -> do
     m <-(`runCaml` s) $ lex str
           >>= parse
           >>= typing
@@ -55,4 +44,15 @@ file s f = do
     case m of
       Right () -> return ()
       Left e -> error $ f ++ ": " ++ show e
+
+data MinCamlOptions = MinCamlOptions
+                    { inline :: Int
+                    , iter   :: Int
+                    }
+instance Options MinCamlOptions where
+  defineOptions = pure MinCamlOptions
+               <*> simpleOption "inline"
+                   0 "maximum size of functions inlined"
+               <*> simpleOption "iter"
+                   100 "maximum number of optimizations iterated"
 
