@@ -36,7 +36,7 @@ tokens :-
   <0> "="           { tk $ TokenEq          }
   <0> "<>"          { tk $ TokenLtGt        }
   <0> "<="          { tk $ TokenLe          }
-  <0> "<="          { tk $ TokenGe          }
+  <0> ">="          { tk $ TokenGe          }
   <0> "<"           { tk $ TokenLt          }
   <0> ">"           { tk $ TokenGt          }
   <0> if            { tk $ TokenIf          }
