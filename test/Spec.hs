@@ -53,9 +53,6 @@ exe s = silently $ run "gcc" options >> (run outp [] <* rm outp)
     out  = pack s
     outp = "." </> s
 
-optimiseLimit :: Int
-optimiseLimit = 1000
-
 unit :: FilePath -> IO (Either Error ())
 unit f = do
   s <- readFile (f ++ ".ml")
