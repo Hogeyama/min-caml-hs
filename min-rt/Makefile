@@ -1,6 +1,12 @@
 
+all: contest.cmp
+
+clean:
+	rm -f min-rt-origin* min-rt-hs* *.ppm *.cmp
+
 %.cmp: %-origin.ppm %-hs.ppm
 	diff $^ > $@
+
 
 #origin
 contest-origin.ppm: min-rt-origin contest.sld
@@ -25,5 +31,3 @@ min-rt-hs.s: min-rt.ml
 	stack exec -- min-caml-hs --inline 100 min-rt
 	mv min-rt.s $@
 
-clean:
-	rm -f min-rt-origin* min-rt-hs* *.ppm *.cmp
