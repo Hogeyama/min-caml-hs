@@ -1,37 +1,32 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Emit where
 
+import Prelude hiding (exp)
 import Id
 import Asm
-import Type
 import AllTypes
 
 import Data.Word (Word32)
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as V
+import Data.Vector ((!))
 import Control.Lens
 import Data.List (foldl')
-import Data.Maybe (fromJust)
-import Data.Foldable (foldlM)
 import Control.Exception.Base (assert)
-import qualified Data.Foldable as F
 import Control.Monad (when, forM_)
 import Data.List (partition)
-import System.IO (Handle, hPutStr, hPutStrLn)
+import System.IO (Handle, hPutStr)
 import Text.Printf
 
 -- ghc-modが動かなくなるので書いている間はコメントアウト
 foreign import ccall "gethi" gethi :: Double -> Word32
 foreign import ccall "getlo" getlo :: Double -> Word32
-{-gethi = undefined :: Double -> Word32-}
-{-getlo = undefined :: Double -> Word32-}
+{-gethi, getlo :: Double -> Word32-}
+{-gethi = undefined-}
+{-getlo = undefined-}
 
 save :: Id -> Caml ()
 save x = do
@@ -64,28 +59,28 @@ ppIdOrImm (C i) = "$" ++ show i
 
 shuffle :: Id -> [(Id,Id)] -> [(Id,Id)]
 shuffle sw xys =
-  let (_,xys') = partition (\(x,y) -> x==y) xys
+  let (_,xys'') = partition (\(x,y) -> x==y) xys
                 --等しくない奴
-      tmp  = partition (\(_,y) -> memAssoc y xys) xys'
-                --等しくない奴でyが定義域にないやつ
+      tmp  = partition (\(_,y) -> memAssoc y xys) xys''
+                --等しくない奴でyが定義域にないやつとあるやつ
   in case tmp of
     ([],[]) -> []
-    ((x,y):xys,[]) ->
+    ((x,y):xys',[]) ->
         let f (y',z) | y == y'   = (sw,z)
                      | otherwise = (y',z)
-        in (y,sw) : (x,y) : shuffle sw (map f xys)
-    (xys,acyc) -> acyc ++ shuffle sw xys
+        in (y,sw) : (x,y) : shuffle sw (map f xys')
+    (xys',acyc) -> acyc ++ shuffle sw xys'
 
 data Dest = Tail | NonTail Id
 
 g :: Handle -> (Dest,Asm) -> Caml ()
-g h = \case
-  (dest, AsmAns exp) -> g' h (dest,exp)
-  (dest, AsmLet (x,t) exp e) -> g' h (NonTail x, exp) >> g h (dest, e)
+g oc = \case
+  (dest, AsmAns exp) -> g' oc (dest,exp)
+  (dest, AsmLet (x,_t) exp e) -> g' oc (NonTail x, exp) >> g oc (dest, e)
 
 g' :: Handle -> (Dest,AExpr) -> Caml ()
-g' h (dest,exp) =
-  let write s = liftIO $ hPutStr h s
+g' oc (dest,exp) =
+  let write s = liftIO $ hPutStr oc s
   in case dest of
     -- Nontailなら結果をdestにセットする.
     NonTail x -> case exp of
@@ -119,10 +114,10 @@ g' h (dest,exp) =
       ALd y (C j) i -> do
           write $ printf "\tmovl\t%d(%s), %s\n" (j * i) y x
 
-      ASt x y (V z) i -> do
-          write $ printf "\tmovl\t%s, (%s,%s,%d)\n" x y z i
-      ASt x y (C j) i -> do
-          write $ printf "\tmovl\t%s, %d(%s)\n" x (j * i) y
+      ASt y z (V w) i -> do
+          write $ printf "\tmovl\t%s, (%s,%s,%d)\n" y z w i
+      ASt y z (C j) i -> do
+          write $ printf "\tmovl\t%s, %d(%s)\n" y (j * i) z
 
       AFMovD y ->
           when (x /= y) $ write $ printf "\tmovsd\t%s, %s\n" y x
@@ -136,7 +131,7 @@ g' h (dest,exp) =
         | otherwise -> do
             when (x /= y) $ write $ printf "\tmovsd\t%s, %s\n" y x
             write $ printf "\taddsd\t%s, %s\n" z x
-      AFSubD y z 
+      AFSubD y z
         | x == z -> do
             ss <- stackSize
             write $ printf "\tmovsd\t%s, %d(%s)\n" z ss regSp
@@ -164,28 +159,28 @@ g' h (dest,exp) =
           write $ printf "\tmovsd\t(%s,%s,%d), %s\n" y z i x
       ALdDF y (C j) i -> do
           write $ printf "\tmovsd\t%d(%s), %s\n" (j * i) y x
-      AStDF x y (V z) i -> do
-          write $ printf "\tmovsd\t%s, (%s,%s,%d)\n" x y z i
-      AStDF x y (C j) i -> do
-          write $ printf "\tmovsd\t%s, %d(%s)\n" x (j * i) y
+      AStDF y z (V w) i -> do
+          write $ printf "\tmovsd\t%s, (%s,%s,%d)\n" y z w i
+      AStDF y z (C j) i -> do
+          write $ printf "\tmovsd\t%s, %d(%s)\n" y (j * i) z
       AComment s -> do
           write $ printf "\t# %s\n" s
-      ASave x y
-        | x `elem` allRegs -> do
+      ASave y z
+        | y `elem` allRegs -> do
             sset <- use stackSet
-            when (S.notMember y sset) $ do
-              save y
-              offset_y <- offset y
-              write $ printf "\tmovl\t%s, %d(%s)\n" x offset_y regSp
-        | x `elem` allFRegs -> do
+            when (S.notMember z sset) $ do
+              save z
+              offset_z <- offset z
+              write $ printf "\tmovl\t%s, %d(%s)\n" y offset_z regSp
+        | y `elem` allFRegs -> do
             sset <- use stackSet
-            when (S.notMember y sset) $ do
-              savef y
-              offset_y <- offset y
-              write $ printf "\tmovsd\t%s, %d(%s)\n" x offset_y regSp
+            when (S.notMember z sset) $ do
+              savef z
+              offset_z <- offset z
+              write $ printf "\tmovsd\t%s, %d(%s)\n" y offset_z regSp
         | otherwise -> do
             sset <- use stackSet
-            assert (S.member y sset) (return ())
+            assert (S.member z sset) (return ())
 
       ARestore y
         | x `elem` allRegs -> do
@@ -198,23 +193,23 @@ g' h (dest,exp) =
 
       AIfEq y z' e1 e2 -> do
           write $ printf "\tcmpl\t%s, %s\n" (ppIdOrImm z') y;
-          g'_non_tail_if h (NonTail x) e1 e2 "je" "jne"
+          g'_non_tail_if oc (NonTail x) e1 e2 "je" "jne"
       AIfLe y z' e1 e2 -> do
           write $ printf "\tcmpl\t%s, %s\n" (ppIdOrImm z') y;
-          g'_non_tail_if h (NonTail x) e1 e2 "jle" "jg"
+          g'_non_tail_if oc (NonTail x) e1 e2 "jle" "jg"
       AIfGe y z' e1 e2 -> do
           write $ printf "\tcmpl\t%s, %s\n" (ppIdOrImm z') y;
-          g'_non_tail_if h (NonTail x) e1 e2 "jge" "jl"
+          g'_non_tail_if oc (NonTail x) e1 e2 "jge" "jl"
 
       AIfFEq y z e1 e2 -> do
           write $ printf "\tcomisd\t%s, %s\n" z y;
-          g'_non_tail_if h (NonTail x) e1 e2 "je" "jne"
+          g'_non_tail_if oc (NonTail x) e1 e2 "je" "jne"
       AIfFLe y z e1 e2 -> do
           write $ printf "\tcomisd\t%s, %s\n" z y;
-          g'_non_tail_if h (NonTail x) e1 e2 "jbe" "ja"
+          g'_non_tail_if oc (NonTail x) e1 e2 "jbe" "ja"
 
       ACallCls y zs ws -> do
-          g'_args h [(y, regCl)] zs ws
+          g'_args oc [(y, regCl)] zs ws
           ss <- stackSize
           when (ss>0) $ write $ printf "\taddl\t$%d, %s\n" ss regSp
           write $ printf "\tcall\t*(%s)\n" regCl
@@ -226,7 +221,7 @@ g' h (dest,exp) =
              | otherwise -> return ()
 
       ACallDir (Label y) zs ws -> do
-          g'_args h [] zs ws;
+          g'_args oc [] zs ws;
           ss <- stackSize
           when (ss>0) $ write $ printf "\taddl\t$%d, %s\n" ss regSp
           write $ printf "\tcall\t%s\n" y
@@ -241,139 +236,139 @@ g' h (dest,exp) =
     Tail -> case exp of
       ANop -> do
           tmp <- genTmp TUnit
-          g' h ((NonTail tmp), exp)
+          g' oc ((NonTail tmp), exp)
           write $ printf "\tret\n"
       ASt{} -> do
           tmp <- genTmp TUnit
-          g' h ((NonTail tmp), exp)
+          g' oc ((NonTail tmp), exp)
           write $ printf "\tret\n"
       AStDF{} -> do
           tmp <- genTmp TUnit
-          g' h ((NonTail tmp), exp)
+          g' oc ((NonTail tmp), exp)
           write $ printf "\tret\n"
       AComment{} -> do
           tmp <- genTmp TUnit
-          g' h ((NonTail tmp), exp)
+          g' oc ((NonTail tmp), exp)
           write $ printf "\tret\n"
       ASave {} -> do
           tmp <- genTmp TUnit
-          g' h ((NonTail tmp), exp)
+          g' oc ((NonTail tmp), exp)
           write $ printf "\tret\n"
 
       ASet{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
       ASetL{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
       AMov{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
       ANeg{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
       AAdd{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
       ASub{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
       ALd{} -> do
-          g' h (NonTail (regs!0), exp)
+          g' oc (NonTail (regs!0), exp)
           write $ printf "\tret\n";
 
       AFMovD{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
       AFNegD{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
       AFAddD{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
       AFSubD{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
       AFMulD{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
       AFDivD{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
       ALdDF{} -> do
-          g' h (NonTail(fregs!0), exp);
+          g' oc (NonTail(fregs!0), exp);
           write $ printf "\tret\n";
 
       ARestore x -> do
           lx <- locate x
           case lx of
-            [i]   -> g' h (NonTail(regs!0), exp)
-            [i,j] -> assert (i+1==j) $ g' h (NonTail(fregs!0), exp)
+            [_i]  -> g' oc (NonTail(regs!0), exp)
+            [i,j] -> assert (i+1==j) $ g' oc (NonTail(fregs!0), exp)
             _ -> assert False undefined
           write $ printf "\tret\n"
 
       AIfEq x y' e1 e2 -> do
           write $ printf "\tcmpl\t%s, %s\n" (ppIdOrImm y') x
-          g'_tail_if h e1 e2 "je" "jne"
+          g'_tail_if oc e1 e2 "je" "jne"
       AIfLe x y' e1 e2 -> do
           write $ printf "\tcmpl\t%s, %s\n" (ppIdOrImm y') x
-          g'_tail_if h e1 e2 "jle" "jg"
+          g'_tail_if oc e1 e2 "jle" "jg"
       AIfGe x y' e1 e2 -> do
           write $ printf "\tcmpl\t%s, %s\n" (ppIdOrImm y') x
-          g'_tail_if h e1 e2 "jge" "jl"
+          g'_tail_if oc e1 e2 "jge" "jl"
       AIfFEq x y e1 e2 -> do
           write $ printf "\tcomisd\t%s, %s\n" y x
-          g'_tail_if h e1 e2 "je" "jne"
+          g'_tail_if oc e1 e2 "je" "jne"
       AIfFLe x y e1 e2 -> do
           write $ printf "\tcomisd\t%s, %s\n" y x
-          g'_tail_if h e1 e2 "jbe" "ja"
+          g'_tail_if oc e1 e2 "jbe" "ja"
 
       ACallCls x ys zs -> do
-          g'_args h [(x, regCl)] ys zs
+          g'_args oc [(x, regCl)] ys zs
           write $ printf "\tjmp\t*(%s)\n" regCl;
       ACallDir (Label x) ys zs -> do
-          g'_args h [] ys zs
+          g'_args oc [] ys zs
           write $ printf "\tjmp\t%s\n" x
 
 g'_tail_if :: Handle -> Asm -> Asm -> Id -> Id -> Caml ()
-g'_tail_if h e1 e2 b bn = do
-  let write s = liftIO $ hPutStr h s
+g'_tail_if oc e1 e2 b bn = do
+  let write s = liftIO $ hPutStr oc s
   b_else <- genId (b ++ "_else")
   write $ printf "\t%s\t%s\n" bn b_else
   ssetBak <- use stackSet
-  g h (Tail, e1)
+  g oc (Tail, e1)
   write $ printf "%s:\n" b_else
   stackSet .= ssetBak
-  g h (Tail, e2)
+  g oc (Tail, e2)
 
 g'_non_tail_if :: Handle -> Dest -> Asm -> Asm -> Id -> Id -> Caml ()
-g'_non_tail_if h dest e1 e2 b bn = do
-  let write s = liftIO $ hPutStr h s
+g'_non_tail_if oc dest e1 e2 b bn = do
+  let write s = liftIO $ hPutStr oc s
   b_else <- genId (b ++ "_else")
   b_cont <- genId (b ++ "_cont")
   write $ printf "\t%s\t%s\n" bn b_else
   ssetBak <- use stackSet
-  g h (dest, e1)
+  g oc (dest, e1)
   sset1 <- use stackSet
   write $ printf "\tjmp\t%s\n" b_cont;
   write $ printf "%s:\n" b_else;
   stackSet .= ssetBak
-  g h (dest, e2)
+  g oc (dest, e2)
   write $ printf "%s:\n" b_cont;
   sset2 <- use stackSet
   stackSet .= S.intersection sset1 sset2
 
 g'_args :: Handle -> [(Id,Id)] -> [Id] -> [Id] -> Caml ()
-g'_args h xRegCl ys zs =
+g'_args oc xRegCl ys zs =
   assert (length ys <= length regs - length xRegCl) $
   assert (length zs <= length fregs) $ do
   ss <- stackSize
-  let write s = liftIO $ hPutStr h s
+  let write s = liftIO $ hPutStr oc s
       sw = printf "%d(%s)" ss regSp :: String
-      (i,yrs) = foldl' f (0,xRegCl) ys
-          where f (i,yrs) y = (i+1, (y,regs!i) : yrs)
-      (d,zfrs) = foldl' f (0,[]) zs
-          where f (d,zfrs) z = (d+1, (z,fregs!d) : zfrs)
+      (_i,yrs) = foldl' f (0,xRegCl) ys
+          where f (i,yrs') y = (i+1, (y,regs!i) : yrs')
+      (_d,zfrs) = foldl' f (0,[]) zs
+          where f (d,zfrs') z = (d+1, (z,fregs!d) : zfrs')
   forM_ (shuffle sw yrs)  $ \(y,r)  -> write $ printf "\tmovl\t%s, %s\n" y r
   forM_ (shuffle sw zfrs) $ \(z,fr) -> write $ printf "\tmovsd\t%s, %s\n" z fr
 
@@ -430,8 +425,8 @@ emit handle (AProg fdata fundefs e) = do
 ----------
 
 memAssoc :: Eq a => a -> [(a,b)] -> Bool
-memAssoc x [] = False
-memAssoc x ((y,_):zs)
+memAssoc _x [] = False
+memAssoc  x ((y,_):zs)
   | x==y      = True
   | otherwise = memAssoc x zs
 

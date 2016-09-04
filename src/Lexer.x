@@ -114,7 +114,7 @@ tk :: Token -> AlexAction Token
 tk t = token $ \_ _ -> t
 
 mktk :: (a -> Token) -> (String -> a) -> AlexAction Token
-mktk con read = token $ \(_,_,_,s) n -> con $ read $ take n s
+mktk con read' = token $ \(_,_,_,s) n -> con $ read' $ take n s
 
 readF :: String -> Double
 readF s

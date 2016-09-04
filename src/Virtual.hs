@@ -4,16 +4,12 @@ module Virtual where
 
 import Id
 import Asm
-import Type
 import AllTypes
 import qualified Closure as C
 
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as V
 import Control.Lens
 import Data.List (foldl')
 import Data.Maybe (fromJust)
@@ -22,18 +18,18 @@ import Data.Foldable (foldlM)
 virtualCode :: CProg -> Caml AProg
 virtualCode (CProg fundefs e) = do
   virtualData .= []
-  fundefs <- mapM h fundefs
-  e <- g M.empty e
+  fundefs' <- mapM h fundefs
+  e' <- g M.empty e
   fdata <- use virtualData
-  return $ AProg fdata fundefs e
+  return $ AProg fdata fundefs' e'
 
 h :: CFunDef -> Caml AFunDef
 h (CFunDef (Label x,t) yts zts e) = do
   let (int, float) = separate yts
-  (offset, load) <- do
+  (_offset, load) <- do
       e' <- g (M.insert x t (insertList yts $ insertList zts M.empty)) e
       let f1 z offset load = fLetD (z, ALdDF x (C offset) 1, load)
-          f2 z t offset load = AsmLet (z,t) (ALd x (C offset) 1) load
+          f2 z t' offset load = AsmLet (z,t') (ALd x (C offset) 1) load
       return $ expand zts (4,e') f1 f2
   case t of
     TFun _ t2 -> return $ AFunDef (Label x) int float load t2
@@ -65,7 +61,7 @@ expand xts ini addf addi =
   classify xts ini
     (\(offset, acc) x ->
         let offset' = align offset in
-        (offset + 8, addf x offset acc))
+        (offset' + 8, addf x offset' acc))
     (\(offset, acc) x t ->
       (offset + 4, addi x t offset acc))
 
@@ -89,7 +85,7 @@ expandM xts ini addf addi =
     (\(offset, acc) x -> do
         let offset' = align offset
         z <- addf x offset acc
-        return (offset + 8, z))
+        return (offset' + 8, z))
     (\(offset, acc) x t -> do
         z <- addi x t offset acc
         return (offset + 4, z))
@@ -161,10 +157,10 @@ g env = \case
             addi y _ offset storeFv = seq' (ASt   y x (C offset) 1, storeFv)
         in  expandM (zip ys ts) (4,e2') addf addi
     e1 <- do
-        e2 <- do
+        e2'' <- do
             z <- genId "l"
             AsmLet (z,TInt) (ASetL l) <$> seq' (ASt z x (C 0) 1, storeFv)
-        return $ AsmLet (regHp, TInt) (AAdd regHp (C $ align offset)) e2
+        return $ AsmLet (regHp, TInt) (AAdd regHp (C $ align offset)) e2''
     return $ AsmLet (x,t) (AMov regHp) e1
 
   CAppCls x ys ->
@@ -186,7 +182,7 @@ g env = \case
 
   CLetTuple xts y e2 -> do
     let s = C.fv e2
-    (offset, load) <- do
+    (_offset, load) <- do
         let addi x offset load
                 | S.member x s = fLetD (x, ALdDF y (C offset) 1, load)
                 | otherwise    = load

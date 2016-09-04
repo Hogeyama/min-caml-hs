@@ -41,7 +41,7 @@ fv = \case
 
   KVar x -> S.singleton x
 
-  KLetRec (KFunDef (x,t) yts e1) e2 ->
+  KLetRec (KFunDef (x,_t) yts e1) e2 ->
     let zs = S.difference (fv e1) (S.fromList $ map fst yts)
     in  S.difference (S.union zs (fv e2)) (S.singleton x) -- deleteじゃダメなの？
 
@@ -57,7 +57,7 @@ fv = \case
 
 insertLet :: Caml (KExpr,Type) -> (Id -> Caml (KExpr,Type)) -> Caml (KExpr, Type)
 insertLet m k = m >>= \case
-  (KVar x, t) -> k x
+  (KVar x, _t) -> k x
   (e,      t) -> do
     x <- genTmp t
     (e',t') <- k x
@@ -116,9 +116,9 @@ g env = \case
       insertLet (g env e2) $ \y ->
       return (KFDiv x y, TFloat)
 
-  cmp@(EEq e1 e2) ->
+  cmp@(EEq _e1 _e2) ->
       g env (EIf cmp (EBool True) (EBool False))
-  cmp@(ELe e1 e2) ->
+  cmp@(ELe _e1 _e2) ->
       g env (EIf cmp (EBool True) (EBool False))
 
   EIf (ENot e1) e2 e3 ->
@@ -128,21 +128,21 @@ g env = \case
       insertLet (g env e1) $ \x ->
       insertLet (g env e2) $ \y -> do
         (e3', t3) <- g env e3
-        (e4', t4) <- g env e4
+        (e4',_t4) <- g env e4
         return (KIfEq x y e3' e4', t3)
   EIf (ELe e1 e2) e3 e4 ->
       insertLet (g env e1) $ \x ->
       insertLet (g env e2) $ \y -> do
         (e3', t3) <- g env e3
-        (e4', t4) <- g env e4
+        (e4',_t4) <- g env e4
         return (KIfLe x y e3' e4', t3)
 
   EIf e1 e2 e3 ->
       g env (EIf (EEq e1 (EBool False)) e3 e2)
 
   ELet (x,t) e1 e2 -> do
-      (e1',t1) <- g env e1
-      (e2',t2) <- g (M.insert x t env) e2
+      (e1',_t1) <- g env e1
+      (e2', t2) <- g (M.insert x t env) e2
       return (KLet (x,t) e1' e2', t2)
 
   EVar x ->
@@ -153,19 +153,19 @@ g env = \case
           _ -> throw $ Failure ("external variable " ++ x ++" does not have an array type")
 
 
-  ELetRec (FunDef (x,t) yts e1) e2 -> do
+  ELetRec (EFunDef (x,t) yts e1) e2 -> do
       --liftIO $ putStr "yts: " >> print yts
       let env' = M.insert x t env
-      (e2',t2) <- g env' e2
+      (e2', t2) <- g env' e2
       --liftIO $ print 0
-      (e1',t1) <- g (M.union (M.fromList yts) env') e1
+      (e1',_t1) <- g (M.union (M.fromList yts) env') e1
       return (KLetRec (KFunDef (x,t) yts e1') e2', t2)
 
   EApp (EVar f) e2s
     | M.notMember f env -> uses extTyEnv (M.lookup f) >>= \case
         Just (TFun _ t) ->
           let bind xs []       = return (KExtFunApp f xs, t)
-              bind xs (e2:e2s) = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s
+              bind xs (e2:e2s') = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s'
           in  bind [] e2s
         Just t -> do
           liftIO $ print t
@@ -176,22 +176,12 @@ g env = \case
   EApp e1 e2s ->
       insertLetWithTy (g env e1) $ \f (TFun _ t) ->
         let bind xs []       = return (KApp f xs, t)
-            bind xs (e2:e2s) = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s
+            bind xs (e2:e2s') = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s'
         in  bind [] e2s
-          --g_e1@(_,t1) <- g env e1
-          --case t1 of
-          --  TFun _ t ->
-          --    insertLet (return g_e1) $ \f ->
-          --      let bind xs []       = return (KApp f xs, t)
-          --          bind xs (e2:e2s) = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s
-          --      in  bind [] e2s
-          --  _ -> error "Aiee!"
 
   ETuple es ->
       let bind xs ts []     = return (KTuple xs, TTuple ts)
-          bind xs ts (e:es) = insertLetWithTy (g env e) $ \x t -> bind (xs++[x]) (ts++[t]) es
-              --g_e@(_,t) <- g env e
-              --insertLet (return g_e) $ \x -> bind (xs++[x]) (ts++[t]) es
+          bind xs ts (e:es') = insertLetWithTy (g env e) $ \x t -> bind (xs++[x]) (ts++[t]) es'
       in  bind [] [] es
 
   ELetTuple xts e1 e2 ->

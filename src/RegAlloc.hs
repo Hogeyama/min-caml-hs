@@ -1,22 +1,19 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module RegAlloc where
 
+import Prelude hiding (exp)
 import Id
 import Asm
-import Type
 import AllTypes
-import qualified Closure as C
 
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Vector (Vector, (!))
-import qualified Data.Vector as V
-import Control.Lens
 import Data.List (foldl')
 import Data.Maybe (fromJust)
 import Data.Foldable (foldlM)
@@ -79,11 +76,11 @@ target src destt = \case
                    in  (c2, rs1++rs2)
 
 targetArgs :: Id -> Vector Id -> Int -> [Id] -> [Id]
-targetArgs src all n = \case
+targetArgs src regs' n = \case
   [] -> []
   y:ys
-    | y == src  -> all!n : targetArgs src all (n+1) ys
-    | otherwise -> targetArgs src all (n+1) ys
+    | y == src  -> regs'!n : targetArgs src regs' (n+1) ys
+    | otherwise -> targetArgs src regs' (n+1) ys
 
 source' :: Type -> AExpr -> [Id]
 source' t = \case
@@ -120,24 +117,24 @@ data AllocResult = Alloc Id
 
 alloc :: Asm -> Map Id Id -> Id -> Type -> [Id] -> Caml AllocResult
 alloc cont regenv x t prefer = assert (M.notMember x regenv) $
-  let all = case t of
+  let allregs = case t of
               TUnit -> [] --dummy
               TFloat -> allFRegs
               _ -> allRegs
-  in if | null all  -> return $ Alloc "%unit" -- Ad hoc (とは)
-        | isReg x   -> return $ Alloc x
-        | otherwise ->
+  in if | null allregs -> return $ Alloc "%unit" -- Ad hoc (とは)
+        | isReg x      -> return $ Alloc x
+        | otherwise    ->
             let free = fv cont
                 live = foldl' func S.empty free
                    where
                      func l y
                        | isReg y   = S.insert y l
                        | otherwise = S.insert (M.findWithDefault y y regenv) l
-            in case F.find (`S.notMember` live) (prefer++all) of
+            in case F.find (`S.notMember` live) (prefer++allregs) of
                  Just r  -> return $ Alloc r
                  Nothing -> let y = fromJust $ F.find p (reverse free)
-                                  where p y = case M.lookup y regenv of
-                                                Just r -> not (isReg y) && r`elem`all
+                                  where p y' = case M.lookup y' regenv of
+                                                Just r -> not (isReg y') && r`elem`allregs
                                                 Nothing -> False
                                 msg = "spilling " ++ y ++ " from "
                                     ++ show (lookupJust y regenv)
@@ -172,7 +169,7 @@ g destt cont regenv = \case
           let r = lookupJust y regenv1
           (e2',regenv2) <- g destt cont (add x r (M.delete y regenv1)) e
           let save = case M.lookup y regenv of
-                       Just r  -> ASave r y
+                       Just r'  -> ASave r' y
                        Nothing -> ANop
           e' <- seq' (save, concat' e1' (r,t) e2')
           return (e', regenv2)
@@ -282,16 +279,16 @@ g' destt cont regenv exp = case exp of
 
 g'_and_restore :: (Id,Type) -> Asm -> Map Id Id -> AExpr -> Caml (Asm, Map Id Id)
 g'_and_restore destt cont regenv exp =
-  g' destt cont regenv exp `catch` h
+  g' destt cont regenv exp `catch` hdr
   where -- NoReg なら restore
-    h (NoReg x t) = do
+    hdr (NoReg x t) = do
       --liftIO $ putStrLn $ "restoring " ++ x
       g destt cont regenv (AsmLet (x, t) (ARestore x) (AsmAns exp))
-    h e = throw e
+    hdr e = throw e
 
 g'_if :: (Id,Type) -> Asm -> Map Id Id -> AExpr
       -> (Asm -> Asm -> AExpr) -> Asm -> Asm -> Caml (Asm, Map Id Id)
-g'_if destt cont regenv exp constr e1 e2 = do
+g'_if destt cont regenv _exp constr e1 e2 = do
   (e1',regenv1) <- g destt cont regenv e1
   (e2',regenv2) <- g destt cont regenv e2
   let regenv' = foldl' func M.empty (fv cont) --共通部分
@@ -307,7 +304,7 @@ g'_if destt cont regenv exp constr e1 e2 = do
 
 g'_call :: (Id,Type) -> Asm -> Map Id Id -> AExpr
         -> ([Id] -> [Id] -> AExpr) -> [Id] -> [Id] -> Caml (Asm, Map Id Id)
-g'_call destt cont regenv exp constr ys zs = do
+g'_call destt cont regenv _exp constr ys zs = do
   let f e x | x == fst destt || M.notMember x regenv = return e
             | otherwise = seq' (ASave (lookupJust x regenv) x, e)
   rys <- (mapM (\y -> find y TInt   regenv) ys)
@@ -318,20 +315,20 @@ g'_call destt cont regenv exp constr ys zs = do
 h :: AFunDef -> Caml AFunDef
 h (AFunDef (Label x) ys zs e t) = do
   let regenv = M.insert x regCl M.empty
-      (i,argRegs,regenv') = foldl' func (0,[],regenv) ys
-          where func (i,argRegs,regenv) y =
+      (_i,argRegs,regenv') = foldl' func (0,[],regenv) ys
+          where func (i,argRegs_,regenv_) y =
                   let r = regs!i
-                  in  (i+1, argRegs++[r], M.insert y r regenv)
-      (f,fargRegs,regenv'') = foldl' func (0,[],regenv') zs
-          where func (d,fargRegs,regenv) z =
+                  in  (i+1, argRegs_++[r], M.insert y r regenv_)
+      (_f,fargRegs,regenv'') = foldl' func (0,[],regenv') zs
+          where func (d,fargRegs_,regenv_) z =
                   assert (not (isReg z)) $
                   let fr = fregs!d
-                  in  (d+1, fargRegs++[fr], M.insert z fr regenv)
+                  in  (d+1, fargRegs_++[fr], M.insert z fr regenv_)
   a <- case t of
          TUnit -> genTmp TUnit
          TFloat -> return $ fregs!0
          _ -> return $ regs!0
-  (e',regenv') <- g (a,t) (AsmAns (AMov a)) regenv'' e
+  (e',_regenv''') <- g (a,t) (AsmAns (AMov a)) regenv'' e
   return $ AFunDef (Label x) argRegs fargRegs e' t
 
 regAlloc :: AProg -> Caml AProg
@@ -341,7 +338,7 @@ regAlloc (AProg fdata fundefs e) = do
       "(up to a few minutes, depending on the size of functions)"
   fundefs' <- mapM h fundefs
   tmp <- genTmp TUnit
-  (e',regenv') <- g (tmp,TUnit) (AsmAns ANop) M.empty e
+  (e',_regenv) <- g (tmp,TUnit) (AsmAns ANop) M.empty e
   return $ AProg fdata fundefs' e'
 
 ----------

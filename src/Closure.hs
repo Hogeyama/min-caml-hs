@@ -6,7 +6,6 @@ module Closure where
 
 import AllTypes
 import Id
-import KNormal hiding (fv)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set, (\\))
@@ -36,9 +35,9 @@ fv = \case
   CIfEq x y e1 e2 -> S.insert x $ S.insert y $ S.union (fv e1) (fv e2)
   CIfLe x y e1 e2 -> S.insert x $ S.insert y $ S.union (fv e1) (fv e2)
 
-  CLet (x,t) e1 e2 -> S.union (fv e1) (S.delete x (fv e2))
+  CLet (x,_t) e1 e2 -> S.union (fv e1) (S.delete x (fv e2))
 
-  CMakeCls (x,t) (Closure l ys) e -> S.delete x (S.union (S.fromList ys) (fv e))
+  CMakeCls (x,_t) (Closure _l ys) e -> S.delete x (S.union (S.fromList ys) (fv e))
 
   CAppCls x ys -> S.fromList $ x:ys
   CAppDir _ xs -> S.fromList xs
@@ -79,11 +78,11 @@ g env known = \case
     toplevelBackup <- use closureToplevel
     let env' = M.insert x t env
         known' = S.insert x known
-        (ys,ts) = unzip yts
+        (ys,_ts) = unzip yts
     e1' <- g (M.union (M.fromList yts) env') known' e1
     -- かくにん
     let zs = fv e1' \\ S.fromList (map fst yts)
-    (known', e1') <-
+    (known'', e1'') <-
         if S.null zs then
             return (known', e1')
         else do
@@ -91,14 +90,14 @@ g env known = \case
                 "free variable(s) " ++ ppList (S.toList zs) ++ " found in function " ++ x ++ "\n" ++
                 "function " ++ x ++ " cannot be directly applied in fact@."
             closureToplevel .= toplevelBackup
-            e1' <- g (M.union (M.fromList yts) env') known e1
-            return (known, e1')
-    let zs = S.toList $ fv e1' \\ S.insert x (S.fromList ys)
-        zts = [(z, fromJust (M.lookup z env')) | z <- zs]
-    closureToplevel %= (CFunDef (Label x, t) yts zts e1' :) -- 追加
-    e2' <- g env' known' e2
+            e1'' <- g (M.union (M.fromList yts) env') known e1
+            return (known, e1'')
+    let zs' = S.toList $ fv e1'' \\ S.insert x (S.fromList ys)
+        zts = [(z, fromJust (M.lookup z env')) | z <- zs']
+    closureToplevel %= (CFunDef (Label x, t) yts zts e1'' :) -- 追加
+    e2' <- g env' known'' e2
     if S.member x (fv e2') then
-        return $ CMakeCls (x,t) (Closure (Label x) zs) e2'
+        return $ CMakeCls (x,t) (Closure (Label x) zs') e2'
     else do
         liftIO $ putStrLn $ "eliminating closure(s) " ++ x
         return e2'

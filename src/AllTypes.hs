@@ -12,7 +12,6 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.IO.Class as IOC
 import Control.Monad.Except (throwError, catchError)
-import System.IO.Unsafe (unsafePerformIO)
 
 ---------------
 -- Id.t = Id --
@@ -32,14 +31,15 @@ data Type = TUnit
           | TFun   [Type] Type
           | TTuple [Type]
           | TArray Type
-          | TVar   TypeRef
+          | TVar   TV
           deriving (Show, Eq)
 type TyEnv = Map Id Type
 
-type TypeRef = IORef (Maybe Type)
+data TV = TV Int (IORef (Maybe Type))
+          deriving (Eq)
 
-instance Show a => Show (IORef a) where
-  show ref = "Ref (" ++ unsafePerformIO (show <$> readIORef ref) ++ ")"
+instance Show TV where
+  show (TV n _) = "tv" ++ show n
 
 
 ---------------------
@@ -63,7 +63,7 @@ data Expr = EUnit
           | EIf       Expr Expr Expr
           | ELet      (Id, Type) Expr Expr
           | EVar      Id
-          | ELetRec   FunDef Expr
+          | ELetRec   EFunDef Expr
           | EApp      Expr [Expr]
           | ETuple    [Expr]
           | ELetTuple [(Id,Type)] Expr Expr
@@ -72,12 +72,12 @@ data Expr = EUnit
           | EPut      Expr Expr Expr
           deriving (Show, Eq)
 
-data FunDef = FunDef { _name :: (Id, Type)
-                     , _args :: [(Id,Type)]
-                     , _body :: Expr
-                     }
+data EFunDef = EFunDef { _ename :: (Id, Type)
+                       , _eargs :: [(Id,Type)]
+                       , _ebody :: Expr
+                       }
             deriving (Show, Eq)
-makeLenses ''FunDef
+makeLenses ''EFunDef
 
 -----------------------
 -- KNormal.t = KExpr --
@@ -218,16 +218,15 @@ data Error = Failure String
            | NoReg Id Type
            deriving Show
 
--- closure
-data S = S { _idCount :: Int
-           , _tvCount :: Int
-           , _extTyEnv  :: TyEnv
-           , _threshold :: Int                -- inline size
-           , _closureToplevel :: [CFunDef]
-           , _virtualData :: [(Label,Double)]
-           , _stackSet :: Set Id -- for Emit module
-           , _stackMap :: [Id]   -- for Emit module
-           , _optimiseLimit :: Int
+data S = S { _idCount :: Int                  -- for Id module
+           , _tvCount :: Int                  -- for Typing module
+           , _extTyEnv  :: TyEnv              -- for Typing module
+           , _threshold :: Int                -- for Inline module (max inline size)
+           , _closureToplevel :: [CFunDef]    -- for Closure module
+           , _virtualData :: [(Label,Double)] -- for Virtual module
+           , _stackSet :: Set Id              -- for Emit module
+           , _stackMap :: [Id]                -- for Emit module
+           , _optimiseLimit :: Int            -- for Optimise module (max optimise iter)
            }
            deriving Show
 makeLenses ''S

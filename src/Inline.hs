@@ -28,18 +28,18 @@ g env e = case e of
 
   KLet xt e1 e2 -> KLet xt <$> g env e1 <*> g env e2
   KLetRec (KFunDef (x,t) yts e1) e2 -> do
-    threshold <- use threshold
-    let env' = if size e1 > threshold then env else M.insert x (yts,e1) env
+    limit <- use threshold
+    let env' = if size e1 > limit then env else M.insert x (yts,e1) env
     e1' <- g env' e1
     e2' <- g env' e2
     return $ KLetRec (KFunDef (x,t) yts e1') e2'
   KApp x ys ->
     case M.lookup x env of
-      Just (zts,e) -> do
+      Just (zts,e') -> do
         liftIO $ putStrLn $ "inlining " ++ x
         let env' = M.fromList (zip (map fst zts) ys)
-        Alpha.g env' e
+        Alpha.g env' e'
       _ -> return e
-  KLetTuple xts y e -> KLetTuple xts y <$> g env e
-  e -> return e
+  KLetTuple xts y e' -> KLetTuple xts y <$> g env e'
+  _ -> return e
 

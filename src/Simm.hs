@@ -1,27 +1,18 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Simm where
 
-import Id
+import Prelude hiding (exp)
+
 import Asm
-import Type
 import AllTypes
-import qualified Closure as C
 
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as V
-import Control.Lens
-import Data.List (foldl')
 import Data.Maybe (fromJust)
-import Data.Foldable (foldlM)
-import Control.Exception.Base (assert)
-import qualified Data.Foldable as F
 
 g :: Map Id Int -> Asm -> Asm
 g env = \case

@@ -51,11 +51,11 @@ g env e = case e of
       e2' <- g env'  e2
       return $ KLetRec (KFunDef (x',t) (zip ys' ts) e1') e2'
 
-  KLetTuple xts y e -> do
+  KLetTuple xts y e' -> do
       let (xs,ts) = unzip xts
       xs' <- mapM genId xs
       let env' = M.union (M.fromList (zip xs xs')) env
-      KLetTuple (zip xs' ts) (find y env) <$> g env' e
+      KLetTuple (zip xs' ts) (find y env) <$> g env' e'
 
 
   KApp x ys -> return $ KApp (find x env) (map (`find` env) ys)

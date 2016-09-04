@@ -8,11 +8,12 @@ import Control.Lens
 genType :: Caml Type
 genType = do
   ref <- liftIO $ newIORef Nothing
-  return $ TVar ref
+  n   <- tvCount <+= 1
+  return $ TVar $ TV n ref
 
-readType :: TypeRef -> Caml (Maybe Type)
-readType ref = liftIO $ readIORef ref
+readType :: TV -> Caml (Maybe Type)
+readType (TV _ ref) = liftIO $ readIORef ref
 
-writeType :: TypeRef -> Type -> Caml ()
-writeType ref t = liftIO $ writeIORef ref (Just t)
+writeType :: TV -> Type -> Caml ()
+writeType (TV _ ref) t = liftIO $ writeIORef ref (Just t)
 

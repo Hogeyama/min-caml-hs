@@ -24,11 +24,11 @@ memberT x env = case M.lookup x env of
                   Just (KTuple _) -> True
                   _ -> False
 findI :: Id -> Map Id KExpr -> Int
-findI x env = case fromJust $ M.lookup x env of KInt i -> i
+findI x env = case fromJust $ M.lookup x env of KInt i -> i; _ -> error "findI"
 findF :: Id -> Map Id KExpr -> Double
-findF x env = case fromJust $ M.lookup x env of KFloat f -> f
+findF x env = case fromJust $ M.lookup x env of KFloat f -> f; _ -> error "findF"
 findT :: Id -> Map Id KExpr -> [Id]
-findT x env = case fromJust $ M.lookup x env of KTuple ys -> ys
+findT x env = case fromJust $ M.lookup x env of KTuple ys -> ys; _ -> error "findT"
 
 g :: Map Id KExpr -> KExpr -> KExpr
 g env e = case e of
@@ -77,12 +77,12 @@ g env e = case e of
   KLetRec (KFunDef xt yts e1) e2 ->
       KLetRec (KFunDef xt yts (g env e1)) (g env e2)
 
-  KLetTuple xts y e
-    | memberT y env -> let f e' (xt,z) = KLet xt (KVar z) e'
-                       in  foldl' f (g env e) (zip xts (findT y env))
-    | otherwise -> KLetTuple xts y (g env e)
+  KLetTuple xts y e'
+    | memberT y env -> let f e'' (xt,z) = KLet xt (KVar z) e''
+                       in  foldl' f (g env e') (zip xts (findT y env))
+    | otherwise -> KLetTuple xts y (g env e')
 
-  e -> e
+  _ -> e
 
 
 

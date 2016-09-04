@@ -2,7 +2,6 @@
 module Optimise where
 
 import AllTypes
-import KNormal
 import Beta
 import Assoc
 import Inline

@@ -50,8 +50,8 @@ g env e = case e of
       e2' <- g env e2
       return $ KLetRec (KFunDef (x,t) yts e1') e2'
 
-  KLetTuple xts y e ->
-      KLetTuple xts (find y env) <$> g env e
+  KLetTuple xts y e' ->
+      KLetTuple xts (find y env) <$> g env e'
 
   KApp       x ys -> return $ KApp (find x env) (map (`find` env) ys)
   KExtFunApp x ys -> return $ KExtFunApp x      (map (`find` env) ys)

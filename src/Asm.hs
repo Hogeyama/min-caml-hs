@@ -4,14 +4,12 @@
 module Asm where
 
 import Id
-import Type
 import AllTypes
 
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Vector (Vector, (!))
+import Data.Vector (Vector)
 import qualified Data.Vector as V
-import Control.Lens
 
 fLetD :: (Id, AExpr, Asm) -> Asm
 fLetD (x,e1,a2) = AsmLet (x,TFloat) e1 a2
@@ -68,7 +66,7 @@ fv e = removeAndUniq S.empty (fv' e)
 
 fv' :: Asm -> [String]
 fv' (AsmAns a) = fvAExpr a
-fv' (AsmLet (x,t) e a) = fvAExpr e ++ removeAndUniq (S.singleton x) (fv a)
+fv' (AsmLet (x,_t) e a) = fvAExpr e ++ removeAndUniq (S.singleton x) (fv a)
 
 fvOfIdOrImm :: IdOrImm -> [String]
 fvOfIdOrImm (V x) = [x]

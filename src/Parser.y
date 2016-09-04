@@ -109,7 +109,7 @@ ID :: { Id }
     : id   { $1 }
     | wild {% genTmp TUnit }
 
-FunDef :: { FunDef }
+FunDef :: { EFunDef }
     : ID FormalArgs '=' Expr {% efundef $1 $2 $4 }
 
 FormalArgs :: { [(Id,Type)] }
@@ -152,10 +152,10 @@ eseq e1 e2 = do
     s <- genTmp TUnit
     return $ ELet (s,TUnit) e1 e2
 
-efundef :: Id -> [(Id,Type)] -> Expr -> Caml FunDef
+efundef :: Id -> [(Id,Type)] -> Expr -> Caml EFunDef
 efundef x args body = do
     ty <- genType
-    return $ FunDef (x,ty) args body
+    return $ EFunDef (x,ty) args body
 
 singleton :: a -> [a]
 singleton x = [x]
