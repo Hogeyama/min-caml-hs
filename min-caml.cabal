@@ -50,7 +50,6 @@ executable min-caml-hs
 
 test-suite min-caml-test
   type:                exitcode-stdio-1.0
-  includes:            float.h
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
