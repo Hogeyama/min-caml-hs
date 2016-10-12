@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Assoc where
+{- flatten let-bindings -}
 
 import KNormal
 import AllTypes

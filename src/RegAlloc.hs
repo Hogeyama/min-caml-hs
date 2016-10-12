@@ -147,9 +147,9 @@ add x r regenv
 
 find :: Id -> Type -> Map Id Id -> Caml Id
 find x t regenv
-  | isReg x           = {-liftIO (putStrLn (x++" 1")) >>-} return x
-  | M.member x regenv = {-liftIO (putStrLn (x++" 2")) >>-} return (lookupJust x regenv)
-  | otherwise         = {-liftIO (putStrLn (x++" 3")) >>-} throw (NoReg x t)
+  | isReg x           = return x
+  | M.member x regenv = return (lookupJust x regenv)
+  | otherwise         = throw (NoReg x t)
 
 find' :: IdOrImm -> Map Id Id -> Caml IdOrImm
 find' (V x) regenv = V <$> find x TInt regenv
@@ -282,7 +282,7 @@ g'_and_restore destt cont regenv exp =
   g' destt cont regenv exp `catch` hdr
   where -- NoReg なら restore
     hdr (NoReg x t) = do
-      --liftIO $ putStrLn $ "restoring " ++ x
+      liftIO $ putStrLn $ "restoring " ++ x
       g destt cont regenv (AsmLet (x, t) (ARestore x) (AsmAns exp))
     hdr e = throw e
 
@@ -346,7 +346,4 @@ regAlloc (AProg fdata fundefs e) = do
 ----------
 lookupJust :: Ord k => k -> Map k a -> a
 lookupJust x env = fromJust $ M.lookup x env
-
-bindM2 :: Monad m => (a -> b -> m c) -> m a -> m b -> m c
-bindM2 f ma mb = do {a <- ma; b <- mb; f a b}
 

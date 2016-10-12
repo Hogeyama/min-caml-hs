@@ -72,18 +72,18 @@ insertLetWithTy m k = m >>= \case
     return (KLet (x,t) e e', t')
 
 g :: Map Id Type -> Expr -> Caml (KExpr, Type)
-g env = \case
+g env e = case e of
   EUnit -> return (KUnit, TUnit)
   EBool True  -> return (KInt 1,TInt)
   EBool False -> return (KInt 0,TInt)
   EInt i -> return (KInt i, TInt)
   EFloat d -> return (KFloat d, TFloat)
 
-  ENot e ->
-      g env (EIf e (EBool False) (EBool True))
+  ENot e' ->
+      g env (EIf e' (EBool False) (EBool True))
 
-  ENeg e ->
-      insertLet (g env e) $ \x ->
+  ENeg e' ->
+      insertLet (g env e') $ \x ->
       return (KNeg x, TInt)
 
   EAdd e1 e2 ->
@@ -95,8 +95,8 @@ g env = \case
       insertLet (g env e2) $ \y ->
       return (KSub x y, TInt)
 
-  EFNeg e ->
-      insertLet (g env e) $ \x ->
+  EFNeg e' ->
+      insertLet (g env e') $ \x ->
       return (KFNeg x, TFloat)
 
   EFAdd e1 e2 ->
@@ -116,10 +116,10 @@ g env = \case
       insertLet (g env e2) $ \y ->
       return (KFDiv x y, TFloat)
 
-  cmp@(EEq _e1 _e2) ->
-      g env (EIf cmp (EBool True) (EBool False))
-  cmp@(ELe _e1 _e2) ->
-      g env (EIf cmp (EBool True) (EBool False))
+  EEq _e1 _e2 ->
+      g env (EIf e (EBool True) (EBool False))
+  ELe _e1 _e2 ->
+      g env (EIf e (EBool True) (EBool False))
 
   EIf (ENot e1) e2 e3 ->
       g env (EIf e1 e3 e2)
@@ -152,12 +152,9 @@ g env = \case
           Just t@(TArray _) -> return (KExtArray x, t)
           _ -> throw $ Failure ("external variable " ++ x ++" does not have an array type")
 
-
   ELetRec (EFunDef (x,t) yts e1) e2 -> do
-      --liftIO $ putStr "yts: " >> print yts
       let env' = M.insert x t env
       (e2', t2) <- g env' e2
-      --liftIO $ print 0
       (e1',_t1) <- g (M.union (M.fromList yts) env') e1
       return (KLetRec (KFunDef (x,t) yts e1') e2', t2)
 
@@ -167,11 +164,7 @@ g env = \case
           let bind xs []       = return (KExtFunApp f xs, t)
               bind xs (e2:e2s') = insertLet (g env e2) $ \x -> bind (xs++[x]) e2s'
           in  bind [] e2s
-        Just t -> do
-          liftIO $ print t
-          error ""
-
-        _ -> error "Aiee!!"
+        _ -> error "KNormal:Aiee!!"
 
   EApp e1 e2s ->
       insertLetWithTy (g env e1) $ \f (TFun _ t) ->
@@ -181,7 +174,7 @@ g env = \case
 
   ETuple es ->
       let bind xs ts []     = return (KTuple xs, TTuple ts)
-          bind xs ts (e:es') = insertLetWithTy (g env e) $ \x t -> bind (xs++[x]) (ts++[t]) es'
+          bind xs ts (e':es') = insertLetWithTy (g env e') $ \x t -> bind (xs++[x]) (ts++[t]) es'
       in  bind [] [] es
 
   ELetTuple xts e1 e2 ->
@@ -196,12 +189,6 @@ g env = \case
                   TFloat -> "create_float_array"
                   _ -> "create_array"
         in  return (KExtFunApp l [x,y], TArray t2)
-        --g_e2@(_,t2) <- g env e2
-        --insertLet (return g_e2) $ \y ->
-        --  let l = case t2 of
-        --            TFloat -> "create_float_array"
-        --            _ -> "create_array"
-        --  in  return (KExtFunApp l [x,y], TArray t2)
 
   EGet e1 e2 ->
     insertLetWithTy (g env e1) $ \x (TArray t) ->

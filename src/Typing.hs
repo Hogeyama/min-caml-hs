@@ -26,14 +26,14 @@ derefType = \case
   TFun t1s t2 -> TFun <$> mapM derefType t1s <*> derefType t2
   TTuple ts -> TTuple <$> mapM derefType ts
   TArray t -> TArray <$> derefType t
-  TVar ref -> readType ref >>= \case
+  TVar tv -> readType tv >>= \case
                 Nothing -> do
                   liftIO $ putStrLn "uninstantiated type variable detected; assuming int@."
-                  writeType ref TInt
+                  writeType tv TInt
                   return TInt
                 Just t -> do
                   t' <- derefType t
-                  writeType ref t'
+                  writeType tv t'
                   return t'
   t -> return t
 
@@ -233,11 +233,10 @@ infer env e =
   `catch`
     \err -> case err of
       Unify t1 t2 -> do
-        --e' <- derefExpr e
-        --t1' <- derefType t1
-        --t2' <- derefType t2
-        --throw $ Typing e' t1' t2'
-        throw $ Typing e t1 t2
+        e' <- derefExpr e
+        t1' <- derefType t1
+        t2' <- derefType t2
+        throw $ Typing e' t1' t2'
       _ -> throw err
 
 

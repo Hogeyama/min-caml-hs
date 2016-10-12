@@ -1,5 +1,6 @@
 
 module Alpha where
+{- rename identifiers to make them unique (alpha-conversion) -}
 
 import AllTypes
 import Id
@@ -19,9 +20,9 @@ g env e = case e of
   KInt{}   -> return e
   KFloat{} -> return e
 
-  KVar  x     -> return $ KVar      $ find x env
-  KNeg  x     -> return $ KNeg      $ find x env
-  KFNeg x     -> return $ KFNeg     $ find x env
+  KVar  x     -> return $ KVar  $ find x env
+  KNeg  x     -> return $ KNeg  $ find x env
+  KFNeg x     -> return $ KFNeg $ find x env
 
   KAdd  x y -> return $ KAdd  (find x env) (find y env)
   KSub  x y -> return $ KSub  (find x env) (find y env)
@@ -57,10 +58,8 @@ g env e = case e of
       let env' = M.union (M.fromList (zip xs xs')) env
       KLetTuple (zip xs' ts) (find y env) <$> g env' e'
 
-
   KApp x ys -> return $ KApp (find x env) (map (`find` env) ys)
   KExtArray x -> return $ KExtArray x
   KExtFunApp x ys -> return $ KExtFunApp x (map (`find` env) ys)
   KTuple xs -> return $ KTuple (map (`find` env) xs)
-
 

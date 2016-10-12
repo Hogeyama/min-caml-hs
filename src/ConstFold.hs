@@ -34,9 +34,9 @@ g :: Map Id KExpr -> KExpr -> KExpr
 g env e = case e of
   KVar x
     | memberI x env -> KInt   $ findI x env
-    {-| memberF x env -> KFloat $ findF x env-}
-    {-| memberT x env -> KTuple $ findT x env-}
-                  {-何故かコメントアウトされてる-}
+    | memberF x env -> KFloat $ findF x env
+    | memberT x env -> KTuple $ findT x env
+                  {-下2つは何故かコメントアウトされていた-}
   KNeg x
     | memberI x env -> KInt $ - findI x env
   KFNeg x
@@ -83,6 +83,4 @@ g env e = case e of
     | otherwise -> KLetTuple xts y (g env e')
 
   _ -> e
-
-
 

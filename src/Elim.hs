@@ -3,9 +3,9 @@
 
 module Elim where
 
-import Id
-import KNormal
-import AllTypes
+import           Id
+import           KNormal
+import           AllTypes
 import qualified Data.Set as S
 
 hasSubEffect :: KExpr -> Bool

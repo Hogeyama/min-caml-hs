@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Beta where
+{- let x = y in ... みたいなのを消す -}
 
 import KNormal
 import AllTypes
@@ -20,9 +21,9 @@ g env e = case e of
   KInt{}   -> return e
   KFloat{} -> return e
 
-  KVar  x     -> return $ KVar      $ find x env
-  KNeg  x     -> return $ KNeg      $ find x env
-  KFNeg x     -> return $ KFNeg     $ find x env
+  KVar  x -> return $ KVar  $ find x env
+  KNeg  x -> return $ KNeg  $ find x env
+  KFNeg x -> return $ KFNeg $ find x env
 
   KAdd  x y -> return $ KAdd  (find x env) (find y env)
   KSub  x y -> return $ KSub  (find x env) (find y env)

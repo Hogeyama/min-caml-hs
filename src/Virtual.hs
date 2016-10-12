@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Virtual where
+{- CProg -> AProg -}
 
 import Id
 import Asm
@@ -41,22 +42,30 @@ separate xts =
     (\(int,float) x   -> (int, float ++ [x]))
     (\(int,float) x _ -> (int ++ [x], float))
 
---classify :: [(a, Type)] -> b
---         -> (b -> a -> Caml b)
---         -> (b -> a -> Type -> Caml b)
---         -> Caml b
-classify :: [(a, Type)] -> b -> (b -> a -> b) -> (b -> a -> Type -> b) -> b
+classify :: [(Id, Type)] -> a
+         -> (a -> Id -> a)
+         -> (a -> Id -> Type -> a)
+         -> a
 classify xts ini addf addi = foldl' func ini xts
   where func acc (x,t) = case t of
           TUnit   -> acc
           TFloat -> addf acc x
           _      -> addi acc x t
 
-expand :: [(a, Type)]
-       -> (Int, t)
-       -> (a -> Int -> t -> t)
-       -> (a -> Type -> Int -> t -> t)
-       -> (Int, t)
+classifyM :: [(Id, Type)] -> a
+          -> (a -> Id -> Caml a)
+          -> (a -> Id -> Type -> Caml a)
+          -> Caml a
+classifyM xts ini addf addi = foldlM func ini xts
+  where func acc (x,t) = case t of
+          TUnit  -> return acc
+          TFloat -> addf acc x
+          _      -> addi acc x t
+
+expand :: [(Id, Type)] -> (Int, Asm)
+       -> (Id -> Int -> Asm -> Asm)
+       -> (Id -> Type -> Int -> Asm -> Asm)
+       -> (Int, Asm)
 expand xts ini addf addi =
   classify xts ini
     (\(offset, acc) x ->
@@ -65,21 +74,11 @@ expand xts ini addf addi =
     (\(offset, acc) x t ->
       (offset + 4, addi x t offset acc))
 
-classifyM :: [(a, Type)] -> b
-          -> (b -> a -> Caml b)
-          -> (b -> a -> Type -> Caml b)
-          -> Caml b
-classifyM xts ini addf addi = foldlM func ini xts
-  where func acc (x,t) = case t of
-          TUnit  -> return acc
-          TFloat -> addf acc x
-          _      -> addi acc x t
-
-expandM :: [(a, Type)]
-        -> (Int, t)
-        -> (a -> Int -> t -> Caml t)
-        -> (a -> Type -> Int -> t -> Caml t)
-        -> Caml (Int, t)
+expandM :: [(Id, Type)]
+        -> (Int, Asm)
+        -> (Id -> Int ->Asm-> Caml Asm)
+        -> (Id -> Type -> Int ->Asm-> Caml Asm)
+        -> Caml (Int, Asm)
 expandM xts ini addf addi =
   classifyM xts ini
     (\(offset, acc) x -> do
@@ -96,13 +95,13 @@ expandM xts ini addf addi =
 insertList :: Ord key => [(key,a)] -> Map key a -> Map key a
 insertList xts m = M.union (M.fromList xts) m
 
--- 通常のlookupと比べて a,b が逆
+-- Prelude.lookupと比べて a,b が逆
 lookupRev :: (Eq a) => a -> [(b,a)] -> Maybe b
 lookupRev i = let f (p,q) = (q,p) in lookup i . map f
-----------
--- Util --
-----------
 
+----------
+-- Main --
+----------
 
 g :: Map Id Type -> CExpr -> Caml Asm
 g env = \case
@@ -149,6 +148,7 @@ g env = \case
     Just TFloat -> return $ AsmAns $ AFMovD x
     _ -> return $ AsmAns $ AMov x
 
+  -- 重要
   CMakeCls (x,t) (Closure l ys) e2 -> do
     e2' <- g (M.insert x t env) e2
     let ts = [ fromJust (M.lookup y env) | y <- ys ]
@@ -207,58 +207,3 @@ g env = \case
 
   CExtArray (Label x) -> return $ AsmAns $ ASetL $ Label $ "min_caml_" ++ x
 
-
-{-{{{
-{{{
-let rec g env = function (* 式の仮想マシンコード生成 (caml2html: virtual_g) *)
-  | Closure.Unit -> Ans(Nop)
-  | Closure.Int(i) -> Ans(Set(i))
-  | Closure.Float(d) ->
-      let l =
-        try
-          (* すでに定数テーブルにあったら再利用 *)
-          let (l, _) = List.find (fun (_, d') -> d = d') !data in
-          l
-        with Not_found ->
-          let l = Id.L(Id.genid "l") in
-          data := (l, d) :: !data;
-          l in
-      let x = Id.genid "l" in
-      Let((x, Type.Int), SetL(l), Ans(LdDF(x, C(0), 1)))
-  | Closure.MakeCls((x, t), { Closure.entry = l; Closure.actual_fv = ys }, e2) -> (* クロージャの生成 (caml2html: virtual_makecls) *)
-      (* Closureのアドレスをセットしてから、自由変数の値をストア *)
-      let e2' = g (M.add x t env) e2 in
-      let offset, store_fv =
-        expand
-          (List.map (fun y -> (y, M.find y env)) ys)
-          (4, e2')
-          (fun y   offset store_fv -> seq(StDF(y, x, C(offset), 1), store_fv))
-          (fun y _ offset store_fv -> seq(St  (y, x, C(offset), 1), store_fv)) in
-      Let((x, t),
-          Mov(reg_hp),
-          Let((reg_hp, Type.Int),
-              Add(reg_hp, C(align offset)),
-              let z = Id.genid "l" in
-                Let((z, Type.Int),
-                    SetL(l),
-                    seq(St(z, x, C(0), 1), store_fv))))
-  | Closure.AppCls(x, ys) ->
-      let (int, float) = separate (List.map (fun y -> (y, M.find y env)) ys) in
-      Ans(CallCls(x, int, float))
-  | Closure.AppDir(Id.L(x), ys) ->
-      let (int, float) = separate (List.map (fun y -> (y, M.find y env)) ys) in
-      Ans(CallDir(Id.L(x), int, float))
-  | Closure.Tuple(xs) -> (* 組の生成 (caml2html: virtual_tuple) *)
-      let y = Id.genid "t" in
-      let (offset, store) =
-        expand
-          (List.map (fun x -> (x, M.find x env)) xs)
-          (0, Ans(Mov(y)))
-          (fun x offset store -> seq(StDF(x, y, C(offset), 1), store))
-          (fun x _ offset store -> seq(St(x, y, C(offset), 1), store)) in
-      Let((y, Type.Tuple(List.map (fun x -> M.find x env) xs)), Mov(reg_hp),
-          Let((reg_hp, Type.Int), Add(reg_hp, C(align offset)),
-              store))
-}}}
-  | Closure.ExtArray(Id.L(x)) -> Ans(SetL(Id.L("min_caml_" ^ x)))
-  }}}-}

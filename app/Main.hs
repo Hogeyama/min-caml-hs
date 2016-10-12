@@ -2,7 +2,7 @@
 
 module Main where
 
-import AllTypes (runCaml, initialState, Error, S(..))
+import AllTypes (runCaml, initialState, S(..))
 import Lexer    (lex)
 import Parser   (parse)
 import Typing   (typing)
@@ -16,8 +16,7 @@ import Simm     (simm)
 import Emit     (emit)
 
 import Prelude hiding (lex)
-import Control.Monad (forM_, when)
-import System.IO (readFile, withFile, Handle, IOMode(..))
+import System.IO (withFile, IOMode(..))
 import Options
 
 main :: IO ()

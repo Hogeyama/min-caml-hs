@@ -1,6 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
+{- KExpr -> CExpr -}
 
 module Closure where
 
@@ -8,10 +7,18 @@ import AllTypes
 import Id
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Set (Set, (\\))
+import Data.Set (Set)
 import qualified Data.Set as S
+import qualified Data.List as L
 import Control.Lens
 import Data.Maybe (fromJust)
+
+closureConvert :: KExpr -> Caml CProg
+closureConvert e = do
+  closureToplevel .= []
+  e' <- g M.empty S.empty e
+  toplevel <- use closureToplevel
+  return $ CProg (reverse toplevel) e'
 
 fv :: CExpr -> Set Id
 fv = \case
@@ -44,21 +51,23 @@ fv = \case
 
   CTuple xs -> S.fromList xs
 
-  CLetTuple xts y e -> S.insert y $ (fv e) \\ (S.fromList (map fst xts))
+  CLetTuple xts y e -> S.insert y $ (fv e) S.\\ (S.fromList (map fst xts))
 
   CPut x y z -> S.fromList [x,y,z]
 
 
+-- known = known to be able to apply directly
 g :: Map Id Type -> Set Id -> KExpr -> Caml CExpr
 g env known = \case
-  KUnit -> return $ CUnit
-  KInt i -> return $ CInt i
+  KUnit    -> return $ CUnit
+  KInt i   -> return $ CInt i
   KFloat d -> return $ CFloat d
-  KNeg x -> return $ CNeg x
-  KAdd x y -> return $ CAdd x y
-  KSub x y -> return $ CSub x y
 
+  KNeg  x -> return $ CNeg x
   KFNeg x -> return $ CFNeg x
+
+  KAdd  x y -> return $ CAdd  x y
+  KSub  x y -> return $ CSub  x y
   KFAdd x y -> return $ CFAdd x y
   KFSub x y -> return $ CFSub x y
   KFMul x y -> return $ CFMul x y
@@ -74,27 +83,26 @@ g env known = \case
   KLetRec (KFunDef (x,t) yts e1) e2 -> do
     -- xは自由変数を持たないと仮定してとりあえずやってみる
     -- だめだったらやり直す
-    -- TODO throw-catchを使ったほうがよいのでは?
     toplevelBackup <- use closureToplevel
-    let env' = M.insert x t env
-        known' = S.insert x known
+    let env'     = M.insert x t env
+        env''    = (M.union (M.fromList yts) env')
+        known'   = S.insert x known
         (ys,_ts) = unzip yts
-    e1' <- g (M.union (M.fromList yts) env') known' e1
+    e1' <- g env'' known' e1
+
     -- かくにん
-    let zs = fv e1' \\ S.fromList (map fst yts)
-    (known'', e1'') <-
-        if S.null zs then
-            return (known', e1')
-        else do
-            liftIO $ putStrLn $
-                "free variable(s) " ++ ppList (S.toList zs) ++ " found in function " ++ x ++ "\n" ++
-                "function " ++ x ++ " cannot be directly applied in fact@."
-            closureToplevel .= toplevelBackup
-            e1'' <- g (M.union (M.fromList yts) env') known e1
-            return (known, e1'')
-    let zs' = S.toList $ fv e1'' \\ S.insert x (S.fromList ys)
-        zts = [(z, fromJust (M.lookup z env')) | z <- zs']
-    closureToplevel %= (CFunDef (Label x, t) yts zts e1'' :) -- 追加
+    (known'', e1'') <- case S.toList (fv e1') L.\\ ys of
+        [] -> return (known', e1')   -- OK
+        zs -> do liftIO $ putStrLn $ -- NG
+                      "free variable(s) " ++ ppList zs ++ " " ++
+                      "found in function " ++ x ++ "\n" ++
+                      "function " ++ x ++ " cannot be directly applied in fact"
+                 closureToplevel .= toplevelBackup
+                 e1'' <- g env'' known e1
+                 return (known, e1'')
+    let zs'  = S.toList (fv e1'') L.\\ (x:ys)
+        zts' = [(z, fromJust (M.lookup z env')) | z <- zs']
+    closureToplevel %= (CFunDef (Label x, t) yts zts' e1'' :) -- 追加
     e2' <- g env' known'' e2
     if S.member x (fv e2') then
         return $ CMakeCls (x,t) (Closure (Label x) zs') e2'
@@ -113,15 +121,8 @@ g env known = \case
 
   KLetTuple xts y e -> CLetTuple xts y <$> g (M.union (M.fromList xts) env) known e
 
-  KGet x y -> return $ CGet x y
-  KPut x y z -> return $ CPut x y z
-  KExtArray x -> return $ CExtArray (Label x)
+  KGet x y        -> return $ CGet x y
+  KPut x y z      -> return $ CPut x y z
+  KExtArray x     -> return $ CExtArray (Label x)
   KExtFunApp x ys -> return $ CAppDir (Label ("min_caml_" ++ x)) ys
-
-closureConvert :: KExpr -> Caml CProg
-closureConvert e = do
-  closureToplevel .= []
-  e' <- g M.empty S.empty e
-  toplevel <- use closureToplevel
-  return $ CProg (reverse toplevel) e'
 

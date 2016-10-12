@@ -2,12 +2,12 @@
 
 module Inline where
 
-import KNormal
 import qualified Alpha
-import AllTypes
-import Data.Map (Map)
+import           KNormal
+import           AllTypes
 import qualified Data.Map as M
-import Control.Lens
+import           Data.Map (Map)
+import           Control.Lens
 
 inline :: KExpr -> Caml KExpr
 inline = g M.empty
