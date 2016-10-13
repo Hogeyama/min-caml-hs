@@ -1,10 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Inline where
+module MiddleEnd.Inline where
 
-import qualified Alpha
-import           KNormal
-import           AllTypes
+import           Base
+import MiddleEnd.KNormal
+
+import qualified MiddleEnd.Alpha as Alpha
 import qualified Data.Map as M
 import           Data.Map (Map)
 import           Control.Lens

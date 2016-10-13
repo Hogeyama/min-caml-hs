@@ -2,13 +2,14 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TupleSections #-}
 
-module Typing where
+module FrontEnd.Typing where
 
-import Control.Monad (zipWithM_, join)
+import Base
+import FrontEnd.Syntax
+
+import           Control.Monad (zipWithM_, join)
 import qualified Data.Map as M
-import Control.Lens
-import AllTypes
-import Type
+import           Control.Lens
 
 -- main function
 typing :: Expr -> Caml Expr

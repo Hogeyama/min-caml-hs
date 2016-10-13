@@ -1,17 +1,65 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TemplateHaskell #-}
 {- KExpr -> CExpr -}
 
-module Closure where
+module MiddleEnd.Closure (
+  CExpr(..),
+  CProg(..),
+  CFunDef(..),
+  Closure(..),
+  closureConvert,
+  fv
+) where
 
-import AllTypes
-import Id
-import Data.Map (Map)
+import Base
+import MiddleEnd.KNormal hiding (fv)
+
+import           Data.Map       (Map)
 import qualified Data.Map as M
-import Data.Set (Set)
+import           Data.Set       (Set)
 import qualified Data.Set as S
 import qualified Data.List as L
-import Control.Lens
-import Data.Maybe (fromJust)
+import           Control.Lens
+import           Data.Maybe     (fromJust)
+
+-----------------------
+-- Closure.t = CExpr --
+-----------------------
+data CExpr = CUnit
+           | CInt      Int
+           | CFloat    Double
+           | CNeg      Id
+           | CAdd      Id Id
+           | CSub      Id Id
+           | CFNeg     Id
+           | CFAdd     Id Id
+           | CFSub     Id Id
+           | CFMul     Id Id
+           | CFDiv     Id Id
+           | CIfEq     Id Id     CExpr CExpr
+           | CIfLe     Id Id     CExpr CExpr
+           | CLet      (Id,Type) CExpr CExpr
+           | CVar      Id
+           | CMakeCls  (Id,Type) Closure CExpr
+           | CAppCls   Id [Id]
+           | CAppDir   Label [Id]
+           | CTuple    [Id]
+           | CLetTuple [(Id,Type)] Id CExpr
+           | CGet      Id Id
+           | CPut      Id Id Id
+           | CExtArray Label
+           deriving Show
+data Closure = Closure { _entry    :: Label
+                       , _actualFV :: [Id]}
+             deriving Show
+data CProg = CProg [CFunDef] CExpr
+           deriving Show
+data CFunDef = CFunDef { _cname     :: (Label,Type)
+                       , _cargs     :: [(Id,Type)]
+                       , _cFormalFV :: [(Id,Type)]
+                       , _cbody     :: CExpr}
+              deriving Show
+{-makeLenses ''CFunDef-}
 
 closureConvert :: KExpr -> Caml CProg
 closureConvert e = do
@@ -85,7 +133,7 @@ g env known = \case
     -- だめだったらやり直す
     toplevelBackup <- use closureToplevel
     let env'     = M.insert x t env
-        env''    = (M.union (M.fromList yts) env')
+        env''    = M.union (M.fromList yts) env'
         known'   = S.insert x known
         (ys,_ts) = unzip yts
     e1' <- g env'' known' e1

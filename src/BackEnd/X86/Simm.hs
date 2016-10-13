@@ -3,16 +3,16 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Simm where
+module BackEnd.X86.Simm where
 
 import Prelude hiding (exp)
 
-import Asm
-import AllTypes
+import Base
+import BackEnd.X86.Asm
 
-import Data.Map (Map)
+import           Data.Map (Map)
 import qualified Data.Map as M
-import Data.Maybe (fromJust)
+import           Data.Maybe (fromJust)
 
 g :: Map Id Int -> Asm -> Asm
 g env = \case

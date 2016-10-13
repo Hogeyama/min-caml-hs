@@ -1,12 +1,13 @@
 
-module Optimise where
+module MiddleEnd.Optimise where
 
-import AllTypes
-import Beta
-import Assoc
-import Inline
-import ConstFold
-import Elim
+import Base
+import MiddleEnd.KNormal
+import MiddleEnd.Beta
+import MiddleEnd.Assoc
+import MiddleEnd.Inline
+import MiddleEnd.ConstFold
+import MiddleEnd.Elim
 import Control.Lens (use)
 
 optimise :: KExpr -> Caml KExpr

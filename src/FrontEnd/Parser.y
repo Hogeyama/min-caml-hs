@@ -1,10 +1,9 @@
 {
-module Parser where
+module FrontEnd.Parser where
 
-import Lexer
-import AllTypes
-import Id
-import Type
+import Base
+import FrontEnd.Lexer
+import FrontEnd.Syntax
 }
 
 %name parse

@@ -1,15 +1,71 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Asm where
+module BackEnd.X86.Asm where
 
-import Id
-import AllTypes
+import Base
 
-import Data.Set (Set)
+import           Data.Set (Set)
 import qualified Data.Set as S
-import Data.Vector (Vector)
+import           Data.Vector (Vector)
 import qualified Data.Vector as V
+import           Control.Lens
+
+-----------------
+-- Asm.t = Asm --
+-----------------
+type Immediate = Int
+data IdOrImm = V Id
+             | C Immediate
+             deriving (Show, Eq)
+
+ -- 命令の列
+data Asm = AsmAns AExpr
+         | AsmLet (Id, Type) AExpr Asm
+         deriving Show
+
+-- x86の各命令に対応
+data AExpr = ANop
+           | ASet Int
+           | ASetL Label
+           | AMov Id
+           | ANeg Id
+           | AAdd Id IdOrImm
+           | ASub Id IdOrImm
+           | ALd Id IdOrImm Int
+           | ASt Id Id IdOrImm Int
+           | AFMovD Id
+           | AFNegD Id
+           | AFAddD Id Id
+           | AFSubD Id Id
+           | AFMulD Id Id
+           | AFDivD Id Id
+           | ALdDF Id IdOrImm Int
+           | AStDF Id Id IdOrImm Int
+           | AComment String
+           | AIfEq Id IdOrImm Asm Asm
+           | AIfLe Id IdOrImm Asm Asm
+           | AIfGe Id IdOrImm Asm Asm
+           | AIfFEq Id Id Asm Asm
+           | AIfFLe Id Id Asm Asm
+           | ACallCls Id    [Id] [Id]
+           | ACallDir Label [Id] [Id]
+           | ASave Id Id
+           | ARestore Id
+           deriving Show
+
+data AFunDef = AFunDef { _aname  :: Label
+                       , _aargs  :: [Id]
+                       , _afargs :: [Id]
+                       , _abody  :: Asm
+                       , _aret   :: Type }
+             deriving Show
+makeLenses ''AFunDef
+
+data AProg = AProg [(Label, Double)] [AFunDef] Asm
+           deriving Show
+
+
 
 fLetD :: (Id, AExpr, Asm) -> Asm
 fLetD (x,e1,a2) = AsmLet (x,TFloat) e1 a2

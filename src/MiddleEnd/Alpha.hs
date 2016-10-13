@@ -1,12 +1,13 @@
 
-module Alpha where
+module MiddleEnd.Alpha where
 {- rename identifiers to make them unique (alpha-conversion) -}
 
-import AllTypes
-import Id
-import Data.Map (Map)
-import Data.Maybe (fromMaybe)
+import Base
+import MiddleEnd.KNormal
+
+import           Data.Map (Map)
 import qualified Data.Map as M
+import           Data.Maybe (fromMaybe)
 
 alpha :: KExpr -> Caml KExpr
 alpha = g M.empty

@@ -3,23 +3,23 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Emit where
+module BackEnd.X86.Emit where
 
 import Prelude hiding (exp)
-import Id
-import Asm
-import AllTypes
 
-import Data.Word (Word32)
+import Base
+import BackEnd.X86.Asm
+
+import           Data.Word (Word32)
 import qualified Data.Set as S
-import Data.Vector ((!))
-import Control.Lens
-import Data.List (foldl')
-import Control.Exception.Base (assert)
-import Control.Monad (when, forM_)
-import Data.List (partition)
-import System.IO (Handle, hPutStr)
-import Text.Printf
+import           Data.Vector ((!))
+import           Control.Lens
+import           Data.List (foldl')
+import           Control.Exception.Base (assert)
+import           Control.Monad (when, forM_)
+import           Data.List (partition)
+import           System.IO (Handle, hPutStr)
+import           Text.Printf
 
 -- ghc-modが動かなくなるので書いている間はコメントアウト
 foreign import ccall "gethi" gethi :: Double -> Word32

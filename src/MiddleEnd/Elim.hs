@@ -1,11 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 
-module Elim where
+module MiddleEnd.Elim where
 
-import           Id
-import           KNormal
-import           AllTypes
+import           Base
+import           MiddleEnd.KNormal
 import qualified Data.Set as S
 
 hasSubEffect :: KExpr -> Bool

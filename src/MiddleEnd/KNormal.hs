@@ -1,20 +1,54 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE LambdaCase #-}
 
-module KNormal (
+module MiddleEnd.KNormal (
   KExpr(..),
   KFunDef(..),
   kNormalize,
   fv
 ) where
 
-import AllTypes
-import Id
+import Base
+import FrontEnd.Syntax
 import Control.Lens
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
+
+-----------------------
+-- KNormal.t = KExpr --
+-----------------------
+data KExpr = KUnit
+           | KInt Int
+           | KFloat Double
+           | KNeg  Id
+           | KAdd  Id Id
+           | KSub  Id Id
+           | KFNeg Id
+           | KFAdd Id Id
+           | KFSub Id Id
+           | KFMul Id Id
+           | KFDiv Id Id
+           | KIfEq Id Id KExpr KExpr
+           | KIfLe Id Id KExpr KExpr
+           | KLet  (Id, Type) KExpr KExpr
+           | KVar  Id
+           | KLetRec KFunDef KExpr
+           | KApp Id [Id]
+           | KTuple [Id]
+           | KLetTuple [(Id,Type)] Id KExpr
+           | KGet Id Id
+           | KPut Id Id Id
+           | KExtArray Id
+           | KExtFunApp Id [Id]
+           deriving (Show, Eq)
+data KFunDef = KFunDef { _kname ::  (Id,Type)
+                       , _kargs :: [(Id,Type)]
+                       , _kbody :: KExpr
+                       }
+              deriving (Show, Eq)
+{-makeLenses ''KFunDef-}
 
 fv :: KExpr -> Set Id
 fv = \case

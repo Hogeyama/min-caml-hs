@@ -1,13 +1,13 @@
 name:                min-caml
 version:             0.1.0.0
 build-type:          Simple
-extra-source-files:  src/Parser.y
-                     src/Lexer.x
+extra-source-files:  src/FrontEnd/Parser.y
+                     src/FrontEnd/Lexer.x
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  C-sources:           src/float.c
+  C-sources:           src/BackEnd/float.c
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2 -Wall
   build-depends:       base
                      , mtl
@@ -19,26 +19,25 @@ library
                      , transformers
   default-language:    Haskell2010
   build-tools:         happy, alex
-  exposed-modules:     Lexer
-                     , Parser
-                     , AllTypes
-                     , Id
-                     , Type
-                     , Typing
-                     , KNormal
-                     , Alpha
-                     , Optimise
-                     , Beta
-                     , Assoc
-                     , Inline
-                     , ConstFold
-                     , Elim
-                     , Closure
-                     , Asm
-                     , Virtual
-                     , RegAlloc
-                     , Simm
-                     , Emit
+  exposed-modules:     Base
+                     , FrontEnd.Syntax
+                     , FrontEnd.Lexer
+                     , FrontEnd.Parser
+                     , FrontEnd.Typing
+                     , MiddleEnd.KNormal
+                     , MiddleEnd.Alpha
+                     , MiddleEnd.Optimise
+                     , MiddleEnd.Beta
+                     , MiddleEnd.Assoc
+                     , MiddleEnd.Inline
+                     , MiddleEnd.ConstFold
+                     , MiddleEnd.Elim
+                     , MiddleEnd.Closure
+                     , BackEnd.X86.Asm
+                     , BackEnd.X86.Virtual
+                     , BackEnd.X86.RegAlloc
+                     , BackEnd.X86.Simm
+                     , BackEnd.X86.Emit
 executable min-caml-hs
   hs-source-dirs:      app
   main-is:             Main.hs

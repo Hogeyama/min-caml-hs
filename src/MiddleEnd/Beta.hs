@@ -1,13 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Beta where
+module MiddleEnd.Beta where
 {- let x = y in ... みたいなのを消す -}
 
-import KNormal
-import AllTypes
-import Data.Map (Map)
-import Data.Maybe (fromMaybe)
+import Base
+import MiddleEnd.KNormal
+
+import           Data.Map (Map)
 import qualified Data.Map as M
+import           Data.Maybe (fromMaybe)
 
 beta :: KExpr -> Caml KExpr
 beta = g M.empty

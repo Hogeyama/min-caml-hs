@@ -1,10 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Assoc where
+module MiddleEnd.Assoc where
 {- flatten let-bindings -}
 
-import KNormal
-import AllTypes
+import Base
+import MiddleEnd.KNormal
 
 assoc :: KExpr -> Caml KExpr
 assoc = return . g

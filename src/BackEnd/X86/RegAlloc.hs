@@ -3,21 +3,21 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module RegAlloc where
+module BackEnd.X86.RegAlloc where
 
 import Prelude hiding (exp)
-import Id
-import Asm
-import AllTypes
 
-import Data.Map (Map)
+import Base
+import BackEnd.X86.Asm
+
+import           Data.Map (Map)
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.Vector (Vector, (!))
-import Data.List (foldl')
-import Data.Maybe (fromJust)
-import Data.Foldable (foldlM)
-import Control.Exception.Base (assert)
+import           Data.Vector (Vector, (!))
+import           Data.List (foldl')
+import           Data.Maybe (fromJust)
+import           Data.Foldable (foldlM)
+import           Control.Exception.Base (assert)
 import qualified Data.Foldable as F
 
 

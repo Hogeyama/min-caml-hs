@@ -3,8 +3,8 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Lexer where
-import AllTypes
+module FrontEnd.Lexer where
+import Base
 import Control.Lens
 import Control.Monad.State.Class
 }

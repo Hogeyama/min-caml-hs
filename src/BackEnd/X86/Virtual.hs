@@ -1,20 +1,19 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Virtual where
+module BackEnd.X86.Virtual where
 {- CProg -> AProg -}
 
-import Id
-import Asm
-import AllTypes
-import qualified Closure as C
+import Base
+import MiddleEnd.Closure
+import BackEnd.X86.Asm hiding (fv)
 
-import Data.Map (Map)
+import           Data.Map (Map)
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Control.Lens
-import Data.List (foldl')
-import Data.Maybe (fromJust)
-import Data.Foldable (foldlM)
+import           Control.Lens
+import           Data.List (foldl')
+import           Data.Maybe (fromJust)
+import           Data.Foldable (foldlM)
 
 virtualCode :: CProg -> Caml AProg
 virtualCode (CProg fundefs e) = do
@@ -181,7 +180,7 @@ g env = \case
                 (AsmLet (regHp,TInt) (AAdd regHp (C $ align offset)) store)
 
   CLetTuple xts y e2 -> do
-    let s = C.fv e2
+    let s = fv e2
     (_offset, load) <- do
         let addi x offset load
                 | S.member x s = fLetD (x, ALdDF y (C offset) 1, load)
