@@ -13,7 +13,6 @@ import                Control.Monad.Trans.State.Lazy
 import qualified      Control.Monad.IO.Class as IOC
 import                Control.Monad.Except           (throwError, catchError)
 import {-# SOURCE #-} FrontEnd.Syntax                (Expr)
-import {-# SOURCE #-} MiddleEnd.Closure              (CFunDef)
 
 -----------
 -- Types --
@@ -43,7 +42,6 @@ data S = S { _idCount :: Int                  -- for Id module
            , _tvCount :: Int                  -- for Typing module
            , _extTyEnv  :: TyEnv              -- for Typing module
            , _threshold :: Int                -- for Inline module (max inline size)
-           , _closureToplevel :: [CFunDef]    -- for Closure module 
            , _virtualData :: [(Label,Double)] -- for Virtual module
            , _stackSet :: Set Id              -- for Emit module
            , _stackMap :: [Id]                -- for Emit module
@@ -52,7 +50,7 @@ data S = S { _idCount :: Int                  -- for Id module
            deriving Show
 makeLenses ''S
 
-type Caml a = StateT S (ExceptT Error IO) a
+type Caml = StateT S (ExceptT Error IO)
 data Error = Failure String
            | Unify Type Type
            | Typing Expr Type Type
@@ -110,7 +108,6 @@ initialState = S { _idCount = 0
                  , _tvCount = 0
                  , _extTyEnv = M.empty
                  , _threshold = 0
-                 , _closureToplevel = []
                  , _virtualData = []
                  , _stackSet = S.empty
                  , _stackMap = []

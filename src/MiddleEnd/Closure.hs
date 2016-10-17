@@ -11,7 +11,7 @@ module MiddleEnd.Closure (
   fv
 ) where
 
-import Base
+import Base              hiding (liftIO)
 import MiddleEnd.KNormal hiding (fv)
 
 import           Data.Map       (Map)
@@ -19,8 +19,10 @@ import qualified Data.Map as M
 import           Data.Set       (Set)
 import qualified Data.Set as S
 import qualified Data.List as L
-import           Control.Lens
 import           Data.Maybe     (fromJust)
+
+import           Control.Monad.Trans.State.Lazy
+import           Control.Monad.IO.Class (liftIO)
 
 -----------------------
 -- Closure.t = CExpr --
@@ -61,11 +63,16 @@ data CFunDef = CFunDef { _cname     :: (Label,Type)
               deriving Show
 {-makeLenses ''CFunDef-}
 
+
+type CamlCls = StateT [CFunDef] Caml
+
 closureConvert :: KExpr -> Caml CProg
-closureConvert e = do
-  closureToplevel .= []
+closureConvert e = evalStateT (f e) []
+
+f :: KExpr -> CamlCls CProg
+f e = do
   e' <- g M.empty S.empty e
-  toplevel <- use closureToplevel
+  toplevel <- get
   return $ CProg (reverse toplevel) e'
 
 fv :: CExpr -> Set Id
@@ -105,7 +112,7 @@ fv = \case
 
 
 -- known = known to be able to apply directly
-g :: Map Id Type -> Set Id -> KExpr -> Caml CExpr
+g :: Map Id Type -> Set Id -> KExpr -> CamlCls CExpr
 g env known = \case
   KUnit    -> return $ CUnit
   KInt i   -> return $ CInt i
@@ -131,7 +138,7 @@ g env known = \case
   KLetRec (KFunDef (x,t) yts e1) e2 -> do
     -- xは自由変数を持たないと仮定してとりあえずやってみる
     -- だめだったらやり直す
-    toplevelBackup <- use closureToplevel
+    toplevelBackup <- get
     let env'     = M.insert x t env
         env''    = M.union (M.fromList yts) env'
         known'   = S.insert x known
@@ -145,12 +152,12 @@ g env known = \case
                       "free variable(s) " ++ ppList zs ++ " " ++
                       "found in function " ++ x ++ "\n" ++
                       "function " ++ x ++ " cannot be directly applied in fact"
-                 closureToplevel .= toplevelBackup
+                 put toplevelBackup
                  e1'' <- g env'' known e1
                  return (known, e1'')
     let zs'  = S.toList (fv e1'') L.\\ (x:ys)
         zts' = [(z, fromJust (M.lookup z env')) | z <- zs']
-    closureToplevel %= (CFunDef (Label x, t) yts zts' e1'' :) -- 追加
+    modify (CFunDef (Label x, t) yts zts' e1'' :) -- 追加
     e2' <- g env' known'' e2
     if S.member x (fv e2') then
         return $ CMakeCls (x,t) (Closure (Label x) zs') e2'
