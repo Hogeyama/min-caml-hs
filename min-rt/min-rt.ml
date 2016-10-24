@@ -23,195 +23,195 @@
 (**************** ユーティリティー関数 ****************)
 (* データ構造へのアクセス関数 *)
 
-(*MINCAML*)let rec o_texturetype m = 
+(*MINCAML*)let rec o_texturetype m =
 (*NOMINCAML let o_texturetype m = *)
-  let (m_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (m_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_tex
 in
 
-(*MINCAML*)let rec o_form m = 
+(*MINCAML*)let rec o_form m =
 (*NOMINCAML let o_form m = *)
-  let (xm_tex, m_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, m_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_shape
 in
 
-(*MINCAML*)let rec o_reflectiontype m = 
+(*MINCAML*)let rec o_reflectiontype m =
 (*NOMINCAML let o_reflectiontype m = *)
-  let (xm_tex, xm_shape, m_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, m_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_surface
 in
 
-(*MINCAML*)let rec o_isinvert m = 
+(*MINCAML*)let rec o_isinvert m =
 (*NOMINCAML let o_isinvert m = *)
-  let (m_tex, m_shape, m_surface, m_isrot, 
-       xm_abc, xm_xyz, 
+  let (m_tex, m_shape, m_surface, m_isrot,
+       xm_abc, xm_xyz,
        m_invert, xm_surfparams, xm_color,
        xm_rot123) = m in
   m_invert
 in
 
-(*MINCAML*)let rec o_isrot m = 
+(*MINCAML*)let rec o_isrot m =
 (*NOMINCAML let o_isrot m = *)
-  let (xm_tex, xm_shape, xm_surface, m_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, m_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
        xm_rot123) = m in
   m_isrot
 in
 
-(*MINCAML*)let rec o_param_a m = 
+(*MINCAML*)let rec o_param_a m =
 (*NOMINCAML let o_param_a m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       m_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       m_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_abc.(0)
 in
 
-(*MINCAML*)let rec o_param_b m = 
+(*MINCAML*)let rec o_param_b m =
 (*NOMINCAML let o_param_b m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       m_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       m_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_abc.(1)
 in
 
-(*MINCAML*)let rec o_param_c m = 
+(*MINCAML*)let rec o_param_c m =
 (*NOMINCAML let o_param_c m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       m_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       m_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_abc.(2)
 in
 
-(*MINCAML*)let rec o_param_x m = 
+(*MINCAML*)let rec o_param_x m =
 (*NOMINCAML let o_param_x m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, m_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, m_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_xyz.(0)
 in
 
-(*MINCAML*)let rec o_param_y m = 
+(*MINCAML*)let rec o_param_y m =
 (*NOMINCAML let o_param_y m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
        xm_abc, m_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_xyz.(1)
 in
 
-(*MINCAML*)let rec o_param_z m = 
+(*MINCAML*)let rec o_param_z m =
 (*NOMINCAML let o_param_z m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
        xm_abc, m_xyz,
        xm_invert, xm_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_xyz.(2)
 in
 
-(*MINCAML*)let rec o_diffuse m = 
+(*MINCAML*)let rec o_diffuse m =
 (*NOMINCAML let o_diffuse m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, m_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_surfparams.(0)
 in
 
-(*MINCAML*)let rec o_hilight m = 
+(*MINCAML*)let rec o_hilight m =
 (*NOMINCAML let o_hilight m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, m_surfparams, xm_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_surfparams.(1)
 in
 
-(*MINCAML*)let rec o_color_red m = 
+(*MINCAML*)let rec o_color_red m =
 (*NOMINCAML let o_color_red m = *)
-  let (xm_tex, xm_shape, m_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, m_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, m_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_color.(0)
 in
 
-(*MINCAML*)let rec o_color_green m = 
+(*MINCAML*)let rec o_color_green m =
 (*NOMINCAML let o_color_green m = *)
-  let (xm_tex, xm_shape, m_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, m_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, m_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_color.(1)
 in
 
-(*MINCAML*)let rec o_color_blue m = 
+(*MINCAML*)let rec o_color_blue m =
 (*NOMINCAML let o_color_blue m = *)
-  let (xm_tex, xm_shape, m_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, m_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, m_color,
-       xm_rot123) = m 
+       xm_rot123) = m
   in
   m_color.(2)
 in
 
-(*MINCAML*)let rec o_param_r1 m = 
+(*MINCAML*)let rec o_param_r1 m =
 (*NOMINCAML let o_param_r1 m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       m_rot123) = m 
+       m_rot123) = m
   in
   m_rot123.(0)
 in
 
-(*MINCAML*)let rec o_param_r2 m = 
+(*MINCAML*)let rec o_param_r2 m =
 (*NOMINCAML let o_param_r2 m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       m_rot123) = m 
+       m_rot123) = m
   in
   m_rot123.(1)
 in
 
-(*MINCAML*)let rec o_param_r3 m = 
+(*MINCAML*)let rec o_param_r3 m =
 (*NOMINCAML let o_param_r3 m = *)
-  let (xm_tex, xm_shape, xm_surface, xm_isrot, 
-       xm_abc, xm_xyz, 
+  let (xm_tex, xm_shape, xm_surface, xm_isrot,
+       xm_abc, xm_xyz,
        xm_invert, xm_surfparams, xm_color,
-       m_rot123) = m 
+       m_rot123) = m
   in
   m_rot123.(2)
 in
 
-(*MINCAML*)let rec normalize_vector v inv = 
+(*MINCAML*)let rec normalize_vector v inv =
 (*NOMINCAML let normalize_vector v inv = *)
   let n0 = (sqrt (fsqr v.(0) +. fsqr v.(1) +. fsqr v.(2))) in
   let n = if inv then -.n0 else n0 in
@@ -282,7 +282,7 @@ in
 
   let texture = read_int () in (* 0 *)
   if texture <> -1 then
-    ( 
+    (
       let form = read_int () in (* 1 *)
       let refltype = read_int () in
       let isrot_p = read_int () in
@@ -292,7 +292,7 @@ in
       abc.(0) <- read_float ();
       abc.(1) <- read_float (); (* 5 *)
       abc.(2) <- read_float ();
-      
+
       let xyz = Array.create 3 0.0 in
 
       xyz.(0) <- read_float ();
@@ -302,7 +302,7 @@ in
       let m_invert = 0.0 > (read_float ()) in (* 10 *)
 
       let reflparam = Array.create 2 0.0 in
-      
+
       reflparam.(0) <- read_float (); (* diffuse *)
       reflparam.(1) <- read_float (); (* hilight *)
 
@@ -318,7 +318,7 @@ in
 	 rotation.(0) <- rad (read_float ());
 	 rotation.(1) <- rad (read_float ());
 	 rotation.(2) <- rad (read_float ()) (* 18 *)
-	) 
+	)
       else ();
 
       (* パラメータの正規化 *)
@@ -327,7 +327,7 @@ in
       let m_invert2 = if form = 2 then true else m_invert in
 
       (* ここからあとは abc と rotation しか操作しない。*)
-      let obj = 
+      let obj =
 	(texture, form, refltype, isrot_p,
 	 abc, xyz, (* x-z *)
 	 m_invert2,
@@ -362,14 +362,14 @@ in
 	 cs_temp.(14) <- cos rotation.(2);
 	 cs_temp.(15) <- sin rotation.(2);
 	 cs_temp.(0) <- cs_temp.(12) *. cs_temp.(14); (* cy cz *)
-	 cs_temp.(1) <- 
+	 cs_temp.(1) <-
 	   (cs_temp.(11) *. cs_temp.(13) *. cs_temp.(14)) -. (cs_temp.(10) *. cs_temp.(15));
-	 cs_temp.(2) <-	
+	 cs_temp.(2) <-
 	   (cs_temp.(10) *. cs_temp.(13) *. cs_temp.(14)) +. (cs_temp.(11) *. cs_temp.(15));
 	 cs_temp.(3) <-	cs_temp.(12) *. cs_temp.(15);
-	 cs_temp.(4) <-	
+	 cs_temp.(4) <-
 	   (cs_temp.(11) *. cs_temp.(13) *. cs_temp.(15)) +. (cs_temp.(10) *. cs_temp.(14));
-	 cs_temp.(5) <-	
+	 cs_temp.(5) <-
 	   (cs_temp.(10) *. cs_temp.(13) *. cs_temp.(15)) -. (cs_temp.(11) *. cs_temp.(14));
 	 cs_temp.(6) <-	-.cs_temp.(13);
 	 cs_temp.(7) <-	cs_temp.(11) *. cs_temp.(12);
@@ -395,7 +395,7 @@ in
 (*      ;
    if dbg.(0) then
    Format.eprintf "OBJ #%d: %d (%f %f %f) (%f %f %f) [%f %f %f]@."
-   n form abc.(0) abc.(1) abc.(2) xyz.(0) xyz.(0) xyz.(0) 
+   n form abc.(0) abc.(1) abc.(2) xyz.(0) xyz.(0) xyz.(0)
    rotation.(0) rotation.(1) rotation.(2);*)
       true
      )
@@ -407,7 +407,7 @@ in
 (*MINCAML*)let rec read_object n =
 (*NOMINCAML let rec read_object n =*)
   if n < 61 then
-    if read_nth_object n 
+    if read_nth_object n
     then read_object (n + 1)
     else ()
   else () (* failwith "data overflow" *)
@@ -433,7 +433,7 @@ in
 (*MINCAML*)let rec read_or_network length =
 (*NOMINCAML let rec read_or_network length =*)
   let net = read_net_item 0 in
-  if net.(0) = -1 then 
+  if net.(0) = -1 then
     Array.create (length + 1) net
   else
     let v = read_or_network (length + 1) in
@@ -462,7 +462,7 @@ in
 
 (**************** 直線とオブジェクトの交点を求める関数群 ****************)
 
-(* solver : 
+(* solver :
    オブジェクト (の index) と、ベクトル L, P を受けとり、
    直線 Lt + P と、オブジェクトとの交点を求める。
    交点がない場合は 0 を、交点がある場合はそれ以外を返す。
@@ -476,12 +476,12 @@ in
 (*MINCAML*)let rec solver_rect m l =
 (*NOMINCAML let solver_rect m l =*)
   (* YZ 平面 *)
-  let answera = 
+  let answera =
     if 0.0 = l.(0) then false else (
-      let d = 
+      let d =
 	if xor (o_isinvert m) (0.0 > l.(0)) then (o_param_a m) else -.(o_param_a m)
       in
-      let d2 = (d -. solver_w_vec.(0)) /. l.(0) 
+      let d2 = (d -. solver_w_vec.(0)) /. l.(0)
       in
       if abs_float (d2 *. l.(1) +. solver_w_vec.(1)) < o_param_b m then
 	if abs_float (d2 *. l.(2) +. solver_w_vec.(2)) < o_param_c m
@@ -491,11 +491,11 @@ in
    )
   in
   if answera then 1 else (* fall through *)
-  
+
   (* ZX 平面 *)
-  let answerb = 
+  let answerb =
     if 0.0 = l.(1) then false else (
-      let d = 
+      let d =
 	if xor (o_isinvert m) (0.0 > l.(1)) then (o_param_b m) else -.(o_param_b m)
       in
       let d2 = (d -. solver_w_vec.(1)) /. l.(1)
@@ -508,11 +508,11 @@ in
     )
   in
   if answerb then 2 else (* fall through *)
-  
+
   (* XY 平面 *)
-  let answerc = 
+  let answerc =
     if 0.0 = l.(2) then false else (
-      let d = 
+      let d =
 	if xor (o_isinvert m) (0.0 > l.(2)) then (o_param_c m) else -.(o_param_c m)
       in
       let d2 = (d -. solver_w_vec.(2)) /. l.(2)
@@ -582,18 +582,18 @@ in
     (
      let bb0 = 2.0 *. solver2nd_mul_b m l
      in
-     let bb = 
+     let bb =
        if o_isrot m <> 0 then bb0 +. solver2nd_rot_b m l
        else bb0
      in
      let cc0 = in_prod_sqr_obj m solver_w_vec in
-     let cc1 = 
+     let cc1 =
        if o_isrot m <> 0 then
 	 (cc0 +. in_prod_co_objrot m solver_w_vec)
        else cc0 in
      let cc =
        if o_form m = 3
-       then cc1 -. 1.0 else cc1 
+       then cc1 -. 1.0 else cc1
      in
      let d = (* 判別式 *)
        let d2 = 4.0 *. aa *. cc in
@@ -629,7 +629,7 @@ in
 
 (*MINCAML*)let rec is_rect_outside m =
 (*NOMINCAML let is_rect_outside m =*)
-  if 
+  if
     (if abs_float isoutside_q.(0) < o_param_a m then
       if abs_float isoutside_q.(1) < o_param_b m then
 	if abs_float isoutside_q.(2) < o_param_c m then true else false
@@ -648,12 +648,12 @@ in
   not (xor (o_isinvert m) s)
 in
 
-(*MINCAML*)let rec is_second_outside m = 
+(*MINCAML*)let rec is_second_outside m =
 (*NOMINCAML let is_second_outside m = *)
   let w = in_prod_sqr_obj m isoutside_q in
   let w2 = if o_form m = 3 then w -. 1.0 else w in
   let w3 =
-    if o_isrot m <> 0 then 
+    if o_isrot m <> 0 then
       w2 +. in_prod_co_objrot m isoutside_q
     else
       w2
@@ -672,7 +672,7 @@ in
     is_rect_outside m
   else if m_shape = 2 then
     is_plane_outside m
-  else 
+  else
     is_second_outside m
 in
 
@@ -706,14 +706,14 @@ in
     let t0 = solver obj light p in
     let t0p = solver_dist.(0) in
     if (if t0 <> 0 then t0p < -0.2 else false)
-    then 
+    then
       (* Q: 交点の候補。実際にすべてのオブジェクトに *)
       (* 入っているかどうかを調べる。*)
       let t = t0p +. 0.01 in
       chkinside_p.(0) <- light.(0) *. t +. p.(0);
       chkinside_p.(1) <- light.(1) *. t +. p.(1);
       chkinside_p.(2) <- light.(2) *. t +. p.(2);
-      if (check_all_inside 0 and_group) 
+      if (check_all_inside 0 and_group)
       then true
       else shadow_check_and_group (iand_ofs + 1) and_group p
 	  (* 次のオブジェクトから候補点を探す *)
@@ -747,13 +747,13 @@ in
   let range_primitive = head.(0) in
   if range_primitive = -1 then false (* OR行列の終了マーク *)
   else (
-    if range_primitive = 99 
+    if range_primitive = 99
     then
       (* range primitive はない *)
       if (shadow_check_one_or_group 1 head p)
       then true
       else shadow_check_one_or_matrix (ofs + 1) or_matrix p
-    else 
+    else
       (* range primitive がある *)
       let t = solver range_primitive light p in
       (* range primitive とぶつからなければ *)
@@ -791,8 +791,8 @@ in
 	    chkinside_p.(0) <- vscan.(0) *. t +. viewpoint.(0);
 	    chkinside_p.(1) <- vscan.(1) *. t +. viewpoint.(1);
 	    chkinside_p.(2) <- vscan.(2) *. t +. viewpoint.(2);
-	    if check_all_inside 0 and_group then 
-	      ( 
+	    if check_all_inside 0 and_group then
+	      (
 		tmin.(0) <- t;
 		crashed_point.(0) <- chkinside_p.(0);
 		crashed_point.(1) <- chkinside_p.(1);
@@ -805,12 +805,12 @@ in
 	 else ()
        else ()
       )
-    else 
+    else
       (
        (* 交点がなく、しかもその物体は内側が真ならこれ以上交点はない *)
        if o_isinvert (objects.(iobj)) then () else end_flag.(0) <- (true)
       );
-    if (not (end_flag.(0))) then 
+    if (not (end_flag.(0))) then
       solve_each_element (iand_ofs + 1) and_group
     else ()
   )
@@ -835,10 +835,10 @@ in
   let range_primitive = head.(0) in
   if range_primitive = -1 then (* 全オブジェクト終了 *)
     ()
-  else ( 
+  else (
     if range_primitive = 99 (* range primitive なし *)
     then (solve_one_or_network 1 head)
-    else 
+    else
       (
 	(* range primitive の衝突しなければ交点はない *)
 	let t = solver range_primitive vscan viewpoint in
@@ -859,7 +859,7 @@ in
 (* crashed_object を返す。関数自体の返り値は交点の有無の真偽値。 *)
 (*MINCAML*)let rec tracer viewpoint vscan =
 (*NOMINCAML let tracer viewpoint vscan =*)
-( 
+(
   tmin.(0) <- (1000000000.0);
   trace_or_matrix 0 (or_net.(0));
   let t = tmin.(0) in
@@ -884,19 +884,19 @@ in
   let rectside = intsec_rectside.(0) in
   (* solver の返り値はぶつかった面の方向を示す *)
   if rectside = 1 then (* YZ面 *)
-    ( 
+    (
       nvector.(0) <- -.(sgn (vscan.(0)));
       nvector.(1) <- 0.0;
       nvector.(2) <- 0.0
      )
   else if rectside = 2 then (* ZX面 *)
-    ( 
+    (
       nvector.(0) <- 0.0;
       nvector.(1) <- -.(sgn (vscan.(1)));
       nvector.(2) <- 0.0
      )
   else if rectside = 3 then (* XY面 *)
-    ( 
+    (
       nvector.(0) <- 0.0;
       nvector.(1) <- 0.0;
       nvector.(2) <- -.(sgn (vscan.(2)))
@@ -904,7 +904,7 @@ in
   else () (* should not happen *)
 in
 
-(*MINCAML*)let rec get_nvector_plane m = 
+(*MINCAML*)let rec get_nvector_plane m =
 (*NOMINCAML let get_nvector_plane m = *)
   (* m_invert は常に true のはず *)
   nvector.(0) <- -.(o_param_a m); (* if m_invert then -.m_a else m_a *)
@@ -912,7 +912,7 @@ in
   nvector.(2) <- -.(o_param_c m)
 in
 
-(*MINCAML*)let rec get_nvector_second_norot m p = 
+(*MINCAML*)let rec get_nvector_second_norot m p =
 (*NOMINCAML let get_nvector_second_norot m p = *)
 (* 回転なし *)
   nvector.(0) <- (p.(0) -. o_param_x m) *. o_param_a m;
@@ -926,10 +926,10 @@ in
   nvector_w.(0) <- p.(0) -. o_param_x m;
   nvector_w.(1) <- p.(1) -. o_param_y m;
   nvector_w.(2) <- p.(2) -. o_param_z m;
-  nvector.(0) <- (nvector_w.(0)	*. o_param_a m 
+  nvector.(0) <- (nvector_w.(0)	*. o_param_a m
 		    +. fhalf (nvector_w.(1) *. o_param_r3 m
 				+. nvector_w.(2) *. o_param_r2 m));
-  nvector.(1) <- (nvector_w.(1)	*. o_param_b m 
+  nvector.(1) <- (nvector_w.(1)	*. o_param_b m
 		    +. fhalf (nvector_w.(0) *. o_param_r3 m
 				+. nvector_w.(2) *. o_param_r1 m));
   nvector.(2) <- (nvector_w.(2)	*. o_param_c m
@@ -975,7 +975,7 @@ in
        if w3 -. d2 < 10.0 then true else false
      in
      texture_color.(1) <-
-       if flag1 
+       if flag1
        then (if flag2 then 255.0 else 0.0)
        else (if flag2 then 0.0 else 255.0)
     )
@@ -986,9 +986,9 @@ in
       texture_color.(0) <- 255.0 *. w2;
       texture_color.(1) <- 255.0 *. (1.0 -. w2)
     )
-  else if m_tex = 3 then 
+  else if m_tex = 3 then
     (* ZX面方向の同心円 (G-B) *)
-    ( 
+    (
       let w1 = p.(0) -. o_param_x m in
       let w3 = p.(2) -. o_param_z m in
       let w2 = sqrt (fsqr w1 +. fsqr w3) /. 10.0 in
@@ -1002,7 +1002,7 @@ in
     let w1 = (p.(0) -. o_param_x m) *. (sqrt (o_param_a m)) in
     let w3 = (p.(2) -. o_param_z m) *. (sqrt (o_param_c m)) in
     let w4 = sqrt ((fsqr w1) +. (fsqr w3)) in
-    let w7 = 
+    let w7 =
       if abs_float w1 < 1.0e-4 then
 	15.0 (* atan +infty = pi/2 *)
       else
@@ -1016,7 +1016,7 @@ in
     let w8 =
       if abs_float w7 < 1.0e-4 then
 	15.0
-      else 
+      else
 	let w6 = abs_float (w2 /. w4)
 	in (atan w6) *. (30.0 /. 3.1415927)
     in
@@ -1034,7 +1034,7 @@ in
 (* energy:    エネルギー (反射とともに減衰) *)
 
 (* 内積 *)
-(*MINCAML*)let rec in_prod v1 v2 = 
+(*MINCAML*)let rec in_prod v1 v2 =
 (*NOMINCAML let in_prod v1 v2 = *)
   v1.(0) *. v2.(0) +. v1.(1) *. v2.(1) +. v1.(2) *. v2.(2)
 in
@@ -1054,8 +1054,8 @@ in
   (* 反射がなく何もぶつからない時は暗闇 (nref = 0) *)
   (* 反射したあと無限遠に達する時は光源の影響を加味 *)
   if (not crashed_p) then
-    if nref <> 0 then 
-      ( 
+    if nref <> 0 then
+      (
 	let hl = -.(in_prod vscan light) in
 	(* 90°を超える場合は0 (光なし) *)
 	if 0.0 < hl then
@@ -1070,16 +1070,16 @@ in
        )
     else ()
   else ();
-  
+
   if crashed_p then
     (* オブジェクトにぶつかった場合 *)
-    ( 
+    (
       (* 1. 物体に当たる光 *)
       let cobj = objects.(crashed_object.(0)) in
       get_nvector cobj crashed_point;
-      let bright = 
+      let bright =
 	if (shadow_check_one_or_matrix 0 or_net.(0) crashed_point)
-	then 
+	then
 	  0.0 (* 影なので光は当たらない *)
 	else (
 	  let br = -.(in_prod nvector light) in
@@ -1091,23 +1091,23 @@ in
       accumulate_vec_mul rgb texture_color bright;
 
       if nref > 4 then () else
-      if 0.1 < energy then 
-	( 
+      if 0.1 < energy then
+	(
 	  (* 2. 反射光 *)
 	  let w = (-2.0) *. in_prod vscan nvector in
 	  (* 反射光の方向にトレース方向を変更 *)
 	  accumulate_vec_mul vscan nvector w;
-	  
+
 	  let m_surface = o_reflectiontype cobj in
 	  if m_surface = 1 then
 	    (* 乱反射 : ハイライトを計算 *)
 	    (
-	     if 0.0 = (o_hilight cobj) then 
+	     if 0.0 = (o_hilight cobj) then
 	       ()
 	     else
 	       let hl = -.(in_prod vscan light) in
 	       if 0.0 < hl then
-		 ( 
+		 (
 		   let ihl =
 		     fsqr (fsqr hl) *. energy *. bright
 		       *. o_hilight cobj
@@ -1120,7 +1120,7 @@ in
 	    )
 	  else if m_surface = 2 then
 	    (* 鏡面反射: 再帰的にトレース *)
-	    ( 
+	    (
 	      viewpoint.(0) <- crashed_point.(0);
 	      viewpoint.(1) <- crashed_point.(1);
 	      viewpoint.(2) <- crashed_point.(2);
@@ -1137,7 +1137,7 @@ in
 (**** データ出力 ****)
 (*MINCAML*)let rec write_rgb _ =
 (*NOMINCAML let write_rgb _ =*)
-  ( 
+  (
    let red = int_of_float rgb.(0) in
    let red = if red > 255 then 255 else red in
    print_byte red;
@@ -1154,7 +1154,7 @@ in
 
 (*MINCAML*)let rec write_ppm_header _ =
 (*NOMINCAML let write_ppm_header _ =*)
-  ( 
+  (
     print_byte 80; (* 'P' *)
     print_byte (48 + 6); (* 48 = '0' *)
     print_byte 10;
@@ -1209,9 +1209,9 @@ in
 (*MINCAML*)let rec scan_line scany =
 (*NOMINCAML let rec scan_line scany =*)
   if scany < size.(0) then
-    ( 
+    (
 (*      if dbg.(0) then
-	( 
+	(
 	  print_string "scanning y = ";
 	  print_int scany;
 	  print_string "\n";
@@ -1239,7 +1239,7 @@ in
   (
     write_ppm_header ();
     let sizex = float_of_int size.(0) in
-    scan_d.(0) <- 128.0 /. sizex; 
+    scan_d.(0) <- 128.0 /. sizex;
     scan_offset.(0) <- sizex /. 2.0;
     scan_line 0
   )
@@ -1249,7 +1249,7 @@ in
 
 (*MINCAML*)let rec rt size_x size_y debug_p =
 (*NOMINCAML let rt size_x size_y debug_p =*)
-  ( 
+  (
     size.(0) <- size_x;
     size.(1) <- size_y;
     dbg.(0) <- debug_p;
